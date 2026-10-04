@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#0f1420">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg">
+<title>Finanzas Familia</title>
+<style>
+  :root {
+    --bg: #0f1420; --card: #1a2133; --card2: #232c42; --text: #eef1f7; --muted: #8b95ab;
+    --accent: #4ade80; --red: #f87171; --blue: #60a5fa; --line: #2a3450;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; overscroll-behavior: none; }
+  button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; }
+  #app { max-width: 520px; margin: 0 auto; min-height: 100%; padding: 16px 16px 110px; }
+
+  .hello { display: flex; justify-content: space-between; align-items: center; margin: 4px 0 16px; }
+  .hello h1 { font-size: 20px; margin: 0; }
+  .hello small { color: var(--muted); display: block; font-size: 13px; }
+  .rate { background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 8px 12px; font-size: 13px; }
+  .rate b { color: var(--accent); }
+
+  .balance { background: linear-gradient(135deg, #1f3a5f, #1a2133 70%); border-radius: 22px; padding: 22px; margin-bottom: 18px; }
+  .balance small { color: #b6c2da; font-size: 13px; }
+  .balance .big { font-size: 38px; font-weight: 700; letter-spacing: -1px; margin: 4px 0; }
+  .balance .bs { color: #b6c2da; font-size: 15px; }
+
+  h2 { font-size: 15px; color: var(--muted); font-weight: 600; margin: 20px 0 10px; text-transform: uppercase; letter-spacing: .5px; }
+  .accounts { display: flex; gap: 10px; overflow-x: auto; margin: 0 -16px; padding: 0 16px 4px; scrollbar-width: none; }
+  .accounts::-webkit-scrollbar { display: none; }
+  .acc { flex: 0 0 150px; background: var(--card); border-radius: 16px; padding: 14px; }
+  .acc .ico { font-size: 22px; }
+  .acc .name { color: var(--muted); font-size: 13px; margin: 6px 0 2px; }
+  .acc .amt { font-weight: 700; font-size: 17px; }
+
+  .list { background: var(--card); border-radius: 18px; overflow: hidden; }
+  .row { display: flex; align-items: center; gap: 12px; padding: 13px 14px; border-bottom: 1px solid var(--line); }
+  .row:last-child { border-bottom: 0; }
+  .row .ico { width: 42px; height: 42px; border-radius: 12px; background: var(--card2); display: grid; place-items: center; font-size: 20px; flex: none; }
+  .row .mid { flex: 1; min-width: 0; }
+  .row .mid b { display: block; font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .mid small { color: var(--muted); font-size: 12.5px; }
+  .row .amt { text-align: right; font-weight: 700; font-size: 15px; white-space: nowrap; }
+  .row .amt small { display: block; color: var(--muted); font-weight: 400; font-size: 12px; }
+  .neg { color: var(--red); } .pos { color: var(--accent); }
+  .empty { padding: 24px; text-align: center; color: var(--muted); }
+
+  .bud { background: var(--card); border-radius: 16px; padding: 14px; margin-bottom: 10px; }
+  .bud .top { display: flex; justify-content: space-between; font-size: 15px; margin-bottom: 8px; }
+  .bud .top span:last-child { color: var(--muted); font-size: 13px; }
+  .bar { height: 9px; background: var(--card2); border-radius: 99px; overflow: hidden; }
+  .bar i { display: block; height: 100%; border-radius: 99px; background: var(--accent); }
+  .bar i.warn { background: #fbbf24; } .bar i.over { background: var(--red); }
+
+  .nav { position: fixed; left: 0; right: 0; bottom: 0; background: rgba(20, 26, 41, .96); border-top: 1px solid var(--line);
+    display: flex; justify-content: space-around; padding: 8px 0 calc(8px + env(safe-area-inset-bottom)); backdrop-filter: blur(10px); }
+  .nav button { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11.5px; color: var(--muted); padding: 6px 0; }
+  .nav button span { font-size: 21px; }
+  .nav button.on { color: var(--accent); }
+
+  .fab { position: fixed; right: 18px; bottom: calc(84px + env(safe-area-inset-bottom)); width: 60px; height: 60px; border-radius: 20px;
+    background: var(--accent); color: #06250f; font-size: 32px; font-weight: 500; box-shadow: 0 8px 24px rgba(74, 222, 128, .35); }
+  .fab:active { transform: scale(.94); }
+
+  .shade { position: fixed; inset: 0; background: rgba(0, 0, 0, .55); opacity: 0; pointer-events: none; transition: opacity .2s; }
+  .sheet { position: fixed; left: 0; right: 0; bottom: 0; max-width: 520px; margin: 0 auto; background: var(--card); border-radius: 24px 24px 0 0;
+    padding: 10px 18px calc(22px + env(safe-area-inset-bottom)); transform: translateY(105%); transition: transform .25s ease; }
+  .open .shade { opacity: 1; pointer-events: auto; }
+  .open .sheet { transform: none; }
+  .grab { width: 40px; height: 4px; border-radius: 9px; background: var(--line); margin: 0 auto 14px; }
+  .seg { display: flex; background: var(--card2); border-radius: 12px; padding: 4px; margin-bottom: 14px; }
+  .seg button { flex: 1; padding: 9px; border-radius: 9px; font-weight: 600; color: var(--muted); }
+  .seg button.on { background: var(--bg); color: var(--text); }
+  .amount { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+  .amount input { flex: 1; min-width: 0; background: none; border: 0; outline: 0; color: var(--text); font-size: 42px; font-weight: 700; }
+  .amount .cur { display: flex; background: var(--card2); border-radius: 12px; padding: 4px; }
+  .amount .cur button { padding: 8px 12px; border-radius: 9px; font-weight: 700; color: var(--muted); }
+  .amount .cur button.on { background: var(--accent); color: #06250f; }
+  .equiv { color: var(--muted); font-size: 13px; min-height: 18px; margin-bottom: 12px; }
+  .field { width: 100%; background: var(--card2); border: 0; outline: 0; color: var(--text); font: inherit; padding: 13px 14px; border-radius: 12px; margin-bottom: 12px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .chips button { background: var(--card2); padding: 9px 12px; border-radius: 999px; font-size: 14px; border: 1.5px solid transparent; }
+  .chips button.on { border-color: var(--accent); color: var(--accent); }
+  .save { width: 100%; background: var(--accent); color: #06250f; font-weight: 700; font-size: 16px; padding: 15px; border-radius: 14px; }
+  .note { color: var(--muted); font-size: 12.5px; text-align: center; margin-top: 22px; }
+  .link { color: var(--blue); text-decoration: underline; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<button class="fab" id="fab" aria-label="Agregar movimiento">+</button>
+
+<nav class="nav" id="nav">
+  <button data-tab="inicio"><span>🏠</span>Inicio</button>
+  <button data-tab="presupuesto"><span>🎯</span>Presupuesto</button>
+  <button data-tab="familia"><span>👨‍👩‍👧</span>Familia</button>
+</nav>
+
+<div id="modal">
+  <div class="shade" id="shade"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <div class="seg" id="segType">
+      <button data-v="gasto" class="on">Gasto</button>
+      <button data-v="ingreso">Ingreso</button>
+    </div>
+    <div class="amount">
+      <input id="fAmount" inputmode="decimal" placeholder="0,00" autocomplete="off">
+      <div class="cur" id="segCur">
+        <button data-v="USD" class="on">$</button>
+        <button data-v="VES">Bs</button>
+      </div>
+    </div>
+    <div class="equiv" id="equiv"></div>
+    <input class="field" id="fDesc" placeholder="¿En qué? (ej. mercado)" autocomplete="off">
+    <div class="chips" id="chipsCat"></div>
+    <select class="field" id="fAcc"></select>
+    <div class="chips" id="chipsWho"></div>
+    <button class="save" id="save">Guardar</button>
+  </div>
+</div>
+
+<script>
+// Prototipo desechable: datos de ejemplo guardados solo en este teléfono (localStorage). Sin base de datos todavía.
+const CATS = { Mercado: '🛒', Servicios: '💡', Transporte: '🚗', Salud: '💊', Comida: '🍔', Hogar: '🏠', Otros: '📦', Ingreso: '💰' };
+const PEOPLE = ['Luis', 'Pareja', 'Hogar'];
+const KEY = 'finanzas-proto-v1';
+
+const daysAgo = n => { const d = new Date(); d.setDate(d.getDate() - n); return d.toISOString(); };
+const seed = () => ({
+  rate: 200, // tasa de ejemplo, se cambia tocando el botón de arriba
+  accounts: [
+    { id: 'efe', name: 'Efectivo', ico: '💵', cur: 'USD', start: 320 },
+    { id: 'bco', name: 'Banco', ico: '🏦', cur: 'VES', start: 45000 },
+    { id: 'zel', name: 'Zelle', ico: '📲', cur: 'USD', start: 850 },
+  ],
+  budgets: { Mercado: 300, Servicios: 80, Transporte: 60, Comida: 100 },
+  moves: [
+    { id: 1, type: 'gasto', desc: 'Mercado semanal', cat: 'Mercado', amount: 86.4, cur: 'USD', acc: 'zel', who: 'Hogar', date: daysAgo(0) },
+    { id: 2, type: 'gasto', desc: 'Gasolina', cat: 'Transporte', amount: 4000, cur: 'VES', acc: 'bco', who: 'Luis', date: daysAgo(1) },
+    { id: 3, type: 'ingreso', desc: 'Pago de cliente', cat: 'Ingreso', amount: 400, cur: 'USD', acc: 'zel', who: 'Luis', date: daysAgo(2) },
+    { id: 4, type: 'gasto', desc: 'Internet', cat: 'Servicios', amount: 25, cur: 'USD', acc: 'efe', who: 'Hogar', date: daysAgo(3) },
+    { id: 5, type: 'gasto', desc: 'Farmacia', cat: 'Salud', amount: 3200, cur: 'VES', acc: 'bco', who: 'Pareja', date: daysAgo(4) },
+    { id: 6, type: 'gasto', desc: 'Hamburguesas', cat: 'Comida', amount: 22, cur: 'USD', acc: 'efe', who: 'Pareja', date: daysAgo(5) },
+  ],
+});
+
+let db;
+try { db = JSON.parse(localStorage.getItem(KEY)); } catch (e) {}
+if (!db) db = seed();
+const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) {} };
+
+const num = (n, d = 2) => n.toLocaleString('es-VE', { minimumFractionDigits: d, maximumFractionDigits: d });
+const fmt = (n, cur) => cur === 'USD' ? '$' + num(n) : 'Bs ' + num(n);
+const toUSD = (n, cur) => cur === 'USD' ? n : n / db.rate;
+const sign = m => m.type === 'gasto' ? -1 : 1;
+const accBalance = a => a.start + db.moves.filter(m => m.acc === a.id).reduce((s, m) => s + sign(m) * m.amount, 0);
+const thisMonth = m => { const d = new Date(m.date), n = new Date(); return d.getMonth() === n.getMonth() && d.getFullYear() === n.getFullYear(); };
+const dayLabel = iso => {
+  const d = new Date(iso), n = new Date();
+  const diff = Math.round((new Date(n.toDateString()) - new Date(d.toDateString())) / 864e5);
+  return diff === 0 ? 'Hoy' : diff === 1 ? 'Ayer' : d.toLocaleDateString('es-VE', { day: 'numeric', month: 'short' });
+};
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+const rowHTML = m => {
+  const acc = db.accounts.find(a => a.id === m.acc);
+  const other = m.cur === 'USD' ? fmt(m.amount * db.rate, 'VES') : fmt(m.amount / db.rate, 'USD');
+  return `<div class="row">
+    <div class="ico">${CATS[m.cat] || '📦'}</div>
+    <div class="mid"><b>${esc(m.desc)}</b><small>${dayLabel(m.date)} · ${esc(acc.name)} · ${esc(m.who)}</small></div>
+    <div class="amt ${m.type === 'gasto' ? 'neg' : 'pos'}">${m.type === 'gasto' ? '−' : '+'}${fmt(m.amount, m.cur)}<small>${other}</small></div>
+  </div>`;
+};
+
+const views = {
+  inicio() {
+    const total = db.accounts.reduce((s, a) => s + toUSD(accBalance(a), a.cur), 0);
+    const moves = [...db.moves].sort((a, b) => b.date.localeCompare(a.date));
+    return `
+      <div class="hello">
+        <div><small>Finanzas de la</small><h1>Familia 👋</h1></div>
+        <button class="rate" id="rateBtn">Tasa: <b>Bs ${num(db.rate)}</b></button>
+      </div>
+      <div class="balance">
+        <small>Saldo total</small>
+        <div class="big">${fmt(total, 'USD')}</div>
+        <div class="bs">≈ ${fmt(total * db.rate, 'VES')}</div>
+      </div>
+      <h2>Cuentas</h2>
+      <div class="accounts">${db.accounts.map(a => `
+        <div class="acc"><div class="ico">${a.ico}</div><div class="name">${a.name}</div><div class="amt">${fmt(accBalance(a), a.cur)}</div></div>`).join('')}
+      </div>
+      <h2>Movimientos</h2>
+      <div class="list">${moves.length ? moves.map(rowHTML).join('') : '<div class="empty">Sin movimientos</div>'}</div>
+      <p class="note">Prototipo con datos de ejemplo · <span class="link" id="reset">reiniciar datos</span></p>`;
+  },
+  presupuesto() {
+    const spent = {};
+    db.moves.filter(m => m.type === 'gasto' && thisMonth(m)).forEach(m => spent[m.cat] = (spent[m.cat] || 0) + toUSD(m.amount, m.cur));
+    const mes = new Date().toLocaleDateString('es-VE', { month: 'long' });
+    return `
+      <div class="hello"><div><small>Presupuesto de</small><h1 style="text-transform:capitalize">${mes}</h1></div></div>
+      ${Object.entries(db.budgets).map(([cat, lim]) => {
+        const s = spent[cat] || 0, pct = Math.min(100, s / lim * 100);
+        return `<div class="bud">
+          <div class="top"><span>${CATS[cat]} ${cat}</span><span>${fmt(s, 'USD')} de ${fmt(lim, 'USD')}</span></div>
+          <div class="bar"><i class="${s > lim ? 'over' : pct > 75 ? 'warn' : ''}" style="width:${pct}%"></i></div>
+        </div>`;
+      }).join('')}
+      <p class="note">Agrega un gasto con el botón + y mira cómo se mueve la barra.</p>`;
+  },
+  familia() {
+    const by = {};
+    db.moves.filter(m => m.type === 'gasto' && thisMonth(m)).forEach(m => by[m.who] = (by[m.who] || 0) + toUSD(m.amount, m.cur));
+    const max = Math.max(1, ...Object.values(by));
+    return `
+      <div class="hello"><div><small>Quién gastó qué</small><h1>Este mes</h1></div></div>
+      ${PEOPLE.map(p => `<div class="bud">
+        <div class="top"><span>${p === 'Hogar' ? '🏠' : '🙂'} ${p}</span><span>${fmt(by[p] || 0, 'USD')}</span></div>
+        <div class="bar"><i style="width:${(by[p] || 0) / max * 100}%; background: var(--blue)"></i></div>
+      </div>`).join('')}
+      <p class="note">En la versión real cada persona entraría con su propio usuario.</p>`;
+  },
+};
+
+let tab = 'inicio';
+const $ = id => document.getElementById(id);
+function render() {
+  $('app').innerHTML = views[tab]();
+  document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
+  const rateBtn = $('rateBtn');
+  if (rateBtn) rateBtn.onclick = () => {
+    const v = parseFloat((prompt('Tasa del día (Bs por 1 $):', db.rate) || '').replace(',', '.'));
+    if (v > 0) { db.rate = v; persist(); render(); }
+  };
+  const reset = $('reset');
+  if (reset) reset.onclick = () => { db = seed(); persist(); render(); };
+}
+$('nav').onclick = e => { const b = e.target.closest('button'); if (b) { tab = b.dataset.tab; render(); scrollTo(0, 0); } };
+
+// Hoja de "nuevo movimiento"
+const form = { type: 'gasto', cur: 'USD', cat: 'Mercado', who: 'Luis' };
+const parseAmount = () => parseFloat($('fAmount').value.replace(',', '.')) || 0;
+function paintForm() {
+  document.querySelectorAll('#segType button').forEach(b => b.classList.toggle('on', b.dataset.v === form.type));
+  document.querySelectorAll('#segCur button').forEach(b => b.classList.toggle('on', b.dataset.v === form.cur));
+  $('chipsCat').style.display = form.type === 'gasto' ? '' : 'none';
+  $('chipsCat').innerHTML = Object.keys(CATS).filter(c => c !== 'Ingreso')
+    .map(c => `<button data-v="${c}" class="${c === form.cat ? 'on' : ''}">${CATS[c]} ${c}</button>`).join('');
+  $('chipsWho').innerHTML = PEOPLE.map(p => `<button data-v="${p}" class="${p === form.who ? 'on' : ''}">${p}</button>`).join('');
+  const n = parseAmount();
+  $('equiv').textContent = n ? '≈ ' + (form.cur === 'USD' ? fmt(n * db.rate, 'VES') : fmt(n / db.rate, 'USD')) : '';
+}
+const pick = (id, key) => $(id).onclick = e => { const b = e.target.closest('button'); if (b) { form[key] = b.dataset.v; paintForm(); } };
+pick('segType', 'type'); pick('segCur', 'cur'); pick('chipsCat', 'cat'); pick('chipsWho', 'who');
+$('fAmount').oninput = paintForm;
+
+const toggle = open => $('modal').classList.toggle('open', open);
+$('fab').onclick = () => {
+  $('fAmount').value = ''; $('fDesc').value = '';
+  $('fAcc').innerHTML = db.accounts.map(a => `<option value="${a.id}">${a.ico} ${a.name} (${a.cur === 'USD' ? '$' : 'Bs'})</option>`).join('');
+  paintForm(); toggle(true);
+};
+$('shade').onclick = () => toggle(false);
+$('save').onclick = () => {
+  const n = parseAmount();
+  if (!n) { $('fAmount').focus(); return; }
+  const acc = db.accounts.find(a => a.id === $('fAcc').value);
+  // el movimiento se guarda en la moneda de la cuenta, convertido con la tasa del día
+  const amount = form.cur === acc.cur ? n : form.cur === 'USD' ? n * db.rate : n / db.rate;
+  const cat = form.type === 'gasto' ? form.cat : 'Ingreso';
+  db.moves.push({ id: Date.now(), type: form.type, desc: $('fDesc').value.trim() || cat, cat, amount, cur: acc.cur, acc: acc.id, who: form.who, date: new Date().toISOString() });
+  persist(); toggle(false); render();
+};
+
+render();
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>
