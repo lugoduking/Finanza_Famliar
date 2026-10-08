@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#f3f6f2">
   <meta name="description" content="Convierte dólares y bolívares con la tasa BCV de la fecha que elijas.">
   <link rel="manifest" href="manifest.webmanifest">
@@ -45,7 +45,7 @@
     .currency-field.is-active { margin-inline:-8px; padding-inline:8px; border-bottom-color:var(--green); border-radius:9px 9px 0 0; background:#edf5ed; }
     .currency-field.is-locked { opacity:.48; }
     .currency-code { color:#37493c; font-size:15px; font-weight:800; }
-    .amount-input { width:100%; min-width:0; padding:8px 0; border:0; outline:0; background:transparent; color:#1d2b22; caret-color:transparent; text-align:right; font-size:22px; font-weight:700; font-variant-numeric:tabular-nums; -webkit-user-select:none; user-select:none; }
+    .amount-input { width:100%; min-width:0; padding:8px 0; border:0; outline:0; background:transparent; color:#1d2b22; caret-color:transparent; text-align:right; font-size:22px; font-weight:700; font-variant-numeric:tabular-nums; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
     .amount-input::placeholder { color:#87948a; }
     .amount-input:focus-visible { outline:none; }
     .converter-actions { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:7px; }
@@ -56,50 +56,28 @@
     .spin { animation:spin .8s linear infinite; }
     @keyframes spin { to { transform:rotate(360deg); } }
     @media (max-width:700px) {
-      body.keyboard-open { overflow:hidden; }
-      .page { min-height:0; padding:7px 14px 8px; }
-      .brand { margin-bottom:8px; }
-      .brand-mark { width:34px; height:34px; border-radius:12px; }
-      .refresh { width:36px; height:36px; }
-      h1 { margin:0 0 7px; font-size:23px; line-height:1.1; }
-      .rate-card { padding:10px 12px; border-radius:17px; box-shadow:0 5px 15px rgba(34,70,43,.07); }
-      .eyebrow { font-size:9px; }
-      .rate-value { margin-top:2px; font-size:29px; }
-      .rate-unit { font-size:10px; }
-      .rate-date-row { margin-top:6px; padding:5px 7px 5px 9px; border-radius:12px; }
-      .rate-date { font-size:13px; }
-      .date-picker-control { width:34px; height:34px; }
-      .date-picker-button { border-radius:10px; }
-      .date-picker-button svg { width:17px; height:17px; }
-      .rate-updated { margin-top:5px; font-size:9px; }
-      .rate-status { margin-top:2px; font-size:9px; }
-      .converter { margin-top:7px; padding:5px 11px 7px; border-radius:16px; box-shadow:0 5px 14px rgba(34,70,43,.06); }
-      .currency-field { grid-template-columns:39px minmax(0,1fr); min-height:43px; gap:6px; }
-      .currency-code { font-size:13px; }
-      .amount-input { padding:5px 0; font-size:20px; }
-      .converter-actions { margin-top:5px; }
-      .conversion-hint { font-size:9px; }
-      .reset-button { min-height:32px; padding:0 9px; font-size:11px; }
+      .page { min-height:0; padding:10px 14px 12px; }
+      .brand { margin-bottom:12px; }
+      h1 { margin:0 0 10px; font-size:29px; line-height:1.12; }
+      .rate-card { padding:15px; border-radius:20px; box-shadow:0 8px 20px rgba(34,70,43,.08); }
+      .eyebrow { font-size:10px; }
+      .rate-value { margin-top:4px; font-size:34px; }
+      .rate-unit { font-size:11px; }
+      .rate-date-row { margin-top:9px; padding:8px 9px 8px 12px; border-radius:14px; }
+      .rate-date { font-size:14px; }
+      .date-picker-control { width:39px; height:39px; }
+      .rate-updated { margin-top:8px; font-size:10px; }
+      .rate-status { margin-top:4px; font-size:10px; }
+      .converter { margin-top:10px; padding:9px 14px 11px; border-radius:19px; box-shadow:0 7px 18px rgba(34,70,43,.07); }
+      .currency-field { grid-template-columns:45px minmax(0,1fr); min-height:53px; gap:8px; }
+      .currency-code { font-size:14px; }
+      .amount-input { padding:8px 0; font-size:23px; }
+      .converter-actions { margin-top:8px; }
+      .conversion-hint { font-size:10px; }
+      .reset-button { min-height:36px; padding:0 11px; font-size:12px; }
       .date-note, .footnote { display:none; }
-      body.keyboard-open .page { padding-top:3px; }
-      body.keyboard-open .brand { margin-bottom:4px; }
-      body.keyboard-open .brand-mark { width:28px; height:28px; font-size:16px; }
-      body.keyboard-open .brand-caption { display:none; }
-      body.keyboard-open .refresh { width:30px; height:30px; }
-      body.keyboard-open h1 { margin-bottom:4px; font-size:19px; }
-      body.keyboard-open .rate-card { padding:7px 9px; border-radius:13px; }
-      body.keyboard-open .rate-value { font-size:24px; }
-      body.keyboard-open .rate-date-row { margin-top:4px; padding:3px 5px 3px 7px; }
-      body.keyboard-open .rate-date { font-size:11px; }
-      body.keyboard-open .date-picker-control { width:28px; height:28px; }
-      body.keyboard-open .rate-updated, body.keyboard-open .rate-status { display:none; }
-      body.keyboard-open .converter { margin-top:5px; padding:3px 9px 5px; }
-      body.keyboard-open .currency-field { min-height:37px; }
-      body.keyboard-open .amount-input { font-size:18px; }
-      body.keyboard-open .converter-actions { margin-top:3px; }
-      body.keyboard-open .reset-button { min-height:28px; }
     }
-    @media (max-width:380px) { .page { padding-left:12px; padding-right:12px; }.rate-date { font-size:12.5px; }.converter-actions { align-items:center; } }
+    @media (max-width:380px) { .page { padding-left:12px; padding-right:12px; }.converter-actions { align-items:center; } }
     @media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:.01ms!important; transition-duration:.01ms!important; } }
   </style>
 </head>
@@ -108,7 +86,7 @@
     <header class="brand">
       <div class="brand-info">
         <div class="brand-mark" aria-hidden="true">$</div>
-        <div><div class="brand-name">Finanzas</div><div class="brand-caption">Versión 0.4.0</div></div>
+        <div><div class="brand-name">Finanzas</div><div class="brand-caption">Versión 0.4.1</div></div>
       </div>
       <button class="refresh" id="refreshButton" type="button" aria-label="Actualizar tasa de la fecha seleccionada">↻</button>
     </header>
@@ -170,25 +148,6 @@
     let entryStarted = false;
     let entryDigits = '';
     let requestNumber = 0;
-    let normalViewportHeight = window.visualViewport?.height || window.innerHeight;
-
-    function isAmountFieldFocused() {
-      return document.activeElement === $('usdAmount') || document.activeElement === $('vesAmount');
-    }
-
-    function setKeyboardLayout(active) {
-      if (!window.matchMedia('(max-width: 700px)').matches) return;
-      document.body.classList.toggle('keyboard-open', active);
-    }
-
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', () => {
-        const viewportHeight = window.visualViewport.height;
-        const keyboardIsOpen = isAmountFieldFocused() && viewportHeight < normalViewportHeight - 100;
-        setKeyboardLayout(keyboardIsOpen || (isAmountFieldFocused() && viewportHeight === normalViewportHeight));
-        if (!isAmountFieldFocused() || !keyboardIsOpen) normalViewportHeight = viewportHeight;
-      });
-    }
 
     function syncCurrencySelection() {
       document.querySelectorAll('.currency-field').forEach(field => {
@@ -425,13 +384,6 @@
           input.blur();
           return;
         }
-        input.setSelectionRange(input.value.length, input.value.length);
-        setKeyboardLayout(true);
-      });
-      input.addEventListener('blur', () => {
-        window.setTimeout(() => {
-          if (!isAmountFieldFocused()) setKeyboardLayout(false);
-        }, 120);
       });
       input.addEventListener('beforeinput', applyDigitInput);
       input.addEventListener('paste', event => {
