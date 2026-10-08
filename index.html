@@ -89,7 +89,7 @@
     <header class="brand">
       <div class="brand-info">
         <div class="brand-mark" aria-hidden="true">$</div>
-        <div><div class="brand-name">Finanzas</div><div class="brand-caption"><span>Versión 0.4.5</span><span aria-hidden="true">·</span><button class="app-update" id="appUpdateButton" type="button" title="Buscar y cargar la última versión publicada">Actualizar app</button></div></div>
+        <div><div class="brand-name">Finanzas</div><div class="brand-caption"><span>Versión 0.4.6</span><span aria-hidden="true">·</span><button class="app-update" id="appUpdateButton" type="button" title="Buscar y cargar la última versión publicada">Actualizar app</button></div></div>
       </div>
       <button class="refresh" id="refreshButton" type="button" aria-label="Actualizar tasa de la fecha seleccionada">↻</button>
     </header>
@@ -271,7 +271,7 @@
     function convertFromActiveField() {
       const usdInput = $('usdAmount');
       const vesInput = $('vesAmount');
-      const sourceCurrency = activeCurrency || 'USD';
+      const sourceCurrency = entryStarted && activeCurrency ? activeCurrency : 'USD';
       const source = sourceCurrency === 'USD' ? usdInput : vesInput;
       const target = sourceCurrency === 'USD' ? vesInput : usdInput;
       if (!selectedRate) {
@@ -378,7 +378,6 @@
     }
 
     function resetConverter() {
-      activeCurrency = null;
       entryStarted = false;
       entryDigits = '';
       $('usdAmount').value = fmt(1);
@@ -386,8 +385,9 @@
       $('conversionHint').textContent = 'Toca USD o Bs para elegir el monto que vas a escribir.';
       syncCurrencySelection();
       updateView();
-      $('usdAmount').blur();
-      $('vesAmount').blur();
+      if (activeCurrency) {
+        $(activeCurrency === 'USD' ? 'usdAmount' : 'vesAmount').focus({ preventScroll: true });
+      }
     }
 
     ['USD', 'VES'].forEach(currency => {
@@ -426,6 +426,11 @@
             return;
           }
           entryStarted = true;
+          entryDigits = (event.data != null ? event.data.replace(/\D/g, '') : digits)
+            .replace(/^0+(?=\d)/, '').slice(0, 15);
+          formatEntryDigits();
+          updateView();
+          return;
         }
         if (digits !== entryDigits) {
           entryDigits = digits.slice(-15);
@@ -445,6 +450,10 @@
         }
         input.focus({ preventScroll: true });
       });
+    });
+    $('resetButton').addEventListener('pointerdown', event => {
+      const editingAmount = document.activeElement === $('usdAmount') || document.activeElement === $('vesAmount');
+      if (editingAmount) event.preventDefault();
     });
     $('resetButton').addEventListener('click', resetConverter);
     $('selectedDate').addEventListener('click', event => {
