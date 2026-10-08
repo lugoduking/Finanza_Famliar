@@ -40,7 +40,7 @@
     .rate-status { min-height:15px; margin:6px 2px 0; color:#52665a; font-size:10px; line-height:1.45; }
     .rate-status.error { color:var(--danger); }
     .date-note { margin:8px 2px 0; color:var(--muted); font-size:10px; line-height:1.45; }
-    .converter { margin-top:15px; padding:14px 18px 15px; border:1px solid #e0e7e1; border-radius:21px; background:var(--panel); box-shadow:0 9px 24px rgba(34,70,43,.07); }
+    .converter { margin-top:15px; padding:14px 18px 15px; border:1px solid #e0e7e1; border-radius:21px; background:var(--panel); box-shadow:0 9px 24px rgba(34,70,43,.07); scroll-margin-top:8px; }
     .currency-field { display:grid; grid-template-columns:49px minmax(0,1fr); align-items:center; gap:10px; min-height:61px; border-bottom:1px solid #e1e7e2; }
     .currency-field.is-active { margin-inline:-8px; padding-inline:8px; border-bottom-color:var(--green); border-radius:9px 9px 0 0; background:#edf5ed; }
     .currency-field.is-locked { opacity:.48; }
@@ -64,7 +64,7 @@
     <header class="brand">
       <div class="brand-info">
         <div class="brand-mark" aria-hidden="true">$</div>
-        <div><div class="brand-name">Finanzas</div><div class="brand-caption">Versión 0.3.8</div></div>
+        <div><div class="brand-name">Finanzas</div><div class="brand-caption">Versión 0.3.9</div></div>
       </div>
       <button class="refresh" id="refreshButton" type="button" aria-label="Actualizar tasa de la fecha seleccionada">↻</button>
     </header>
@@ -96,7 +96,7 @@
         <p class="rate-status" id="rateStatus" role="status">Conectando con la fuente de tasas…</p>
       </section>
 
-      <section class="converter" aria-label="Conversión entre dólares y bolívares">
+      <section class="converter" id="converter" aria-label="Conversión entre dólares y bolívares">
         <div class="currency-field" data-currency="USD">
           <label class="currency-code" for="usdAmount">USD</label>
           <input class="amount-input" id="usdAmount" type="text" inputmode="numeric" autocomplete="off" value="1,00" aria-label="Monto en dólares estadounidenses">
@@ -128,6 +128,47 @@
     let entryStarted = false;
     let entryDigits = '';
     let requestNumber = 0;
+    let scrollBeforeAmountEdit = null;
+    let mobileKeyboardVisible = false;
+    let normalViewportHeight = window.visualViewport?.height || window.innerHeight;
+
+    function isAmountFieldFocused() {
+      return document.activeElement === $('usdAmount') || document.activeElement === $('vesAmount');
+    }
+
+    function revealConverterOnMobile() {
+      if (!window.matchMedia('(max-width: 700px)').matches) return;
+      if (scrollBeforeAmountEdit === null) scrollBeforeAmountEdit = window.scrollY;
+      requestAnimationFrame(() => {
+        const converter = $('converter');
+        const top = converter.getBoundingClientRect().top + window.scrollY - 8;
+        window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+      });
+    }
+
+    function restorePageAfterAmountEdit() {
+      if (scrollBeforeAmountEdit === null) return;
+      const top = scrollBeforeAmountEdit;
+      scrollBeforeAmountEdit = null;
+      mobileKeyboardVisible = false;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', () => {
+        const viewportHeight = window.visualViewport.height;
+        const keyboardIsOpen = isAmountFieldFocused() && viewportHeight < normalViewportHeight - 100;
+        if (keyboardIsOpen) {
+          mobileKeyboardVisible = true;
+          revealConverterOnMobile();
+        } else if (mobileKeyboardVisible && !keyboardIsOpen) {
+          restorePageAfterAmountEdit();
+          normalViewportHeight = viewportHeight;
+        } else if (!isAmountFieldFocused()) {
+          normalViewportHeight = viewportHeight;
+        }
+      });
+    }
 
     function syncCurrencySelection() {
       document.querySelectorAll('.currency-field').forEach(field => {
@@ -365,6 +406,17 @@
           return;
         }
         input.setSelectionRange(input.value.length, input.value.length);
+        if (window.matchMedia('(max-width: 700px)').matches) {
+          revealConverterOnMobile();
+          window.setTimeout(() => {
+            if (document.activeElement === input) revealConverterOnMobile();
+          }, 300);
+        }
+      });
+      input.addEventListener('blur', () => {
+        window.setTimeout(() => {
+          if (!isAmountFieldFocused()) restorePageAfterAmountEdit();
+        }, 120);
       });
       input.addEventListener('beforeinput', applyDigitInput);
       input.addEventListener('paste', event => {
