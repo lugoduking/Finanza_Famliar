@@ -83,7 +83,7 @@
       <section class="converter" aria-label="Conversión entre dólares y bolívares">
         <div class="currency-field">
           <label class="currency-code" for="usdAmount">USD</label>
-          <input class="amount-input" id="usdAmount" type="text" inputmode="decimal" autocomplete="off" value="1,00" aria-label="Monto en dólares estadounidenses">
+          <input class="amount-input" id="usdAmount" type="text" inputmode="numeric" autocomplete="off" value="1,00" aria-label="Monto en dólares estadounidenses">
         </div>
         <div class="currency-field">
           <label class="currency-code" for="vesAmount">Bs</label>
@@ -114,7 +114,27 @@
     let selectedRate = null;
     let rateState = 'loading';
     let activeCurrency = 'USD';
+    let usdEntryActive = false;
+    let usdDigits = '';
     let requestNumber = 0;
+
+    function formatUsdDigits() {
+      const cents = Number(usdDigits || '0');
+      $('usdAmount').value = fmt(cents / 100);
+    }
+
+    function applyUsdDigitInput(event) {
+      if (!usdEntryActive) return;
+      const isDigit = event.inputType === 'insertText' && /^\d$/.test(event.data || '');
+      const isDelete = event.inputType === 'deleteContentBackward' || event.inputType === 'deleteContentForward';
+      if (!isDigit && !isDelete) return;
+
+      event.preventDefault();
+      if (isDelete) usdDigits = usdDigits.slice(0, -1);
+      else usdDigits = `${usdDigits}${event.data}`.replace(/^0+(?=\d)/, '').slice(0, 15);
+      formatUsdDigits();
+      updateView();
+    }
 
     function parseAmount(raw) {
       let value = String(raw || '').trim().replace(/\s/g, '').replace(/[^\d,.-]/g, '');
@@ -235,7 +255,35 @@
       updateView();
     }
 
-    $('usdAmount').addEventListener('input', () => { activeCurrency = 'USD'; updateView(); });
+    $('usdAmount').addEventListener('focus', () => {
+      activeCurrency = 'USD';
+      usdEntryActive = true;
+      usdDigits = '';
+      formatUsdDigits();
+      updateView();
+    });
+    $('usdAmount').addEventListener('beforeinput', applyUsdDigitInput);
+    $('usdAmount').addEventListener('paste', event => {
+      if (!usdEntryActive) return;
+      event.preventDefault();
+      const pastedDigits = (event.clipboardData?.getData('text') || '').replace(/\D/g, '');
+      usdDigits = `${usdDigits}${pastedDigits}`.replace(/^0+(?=\d)/, '').slice(0, 15);
+      formatUsdDigits();
+      updateView();
+    });
+    $('usdAmount').addEventListener('input', event => {
+      if (usdEntryActive) {
+        // Fallback for keyboards that do not emit a cancellable beforeinput event.
+        const digits = event.target.value.replace(/\D/g, '');
+        if (digits !== usdDigits) {
+          usdDigits = digits.slice(-15);
+          formatUsdDigits();
+        }
+      }
+      activeCurrency = 'USD';
+      updateView();
+    });
+    $('usdAmount').addEventListener('blur', () => { usdEntryActive = false; });
     $('vesAmount').addEventListener('input', () => { activeCurrency = 'VES'; updateView(); });
     $('selectedDate').addEventListener('change', () => loadRate());
     $('refreshButton').addEventListener('click', () => loadRate());
