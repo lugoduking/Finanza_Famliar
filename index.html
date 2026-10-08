@@ -20,7 +20,8 @@
     .brand-info { display:flex; align-items:center; gap:11px; }
     .brand-mark { width:40px; height:40px; display:grid; place-items:center; border:2px solid var(--green); border-radius:15px; background:#e6f1e7; color:var(--green); font-size:20px; font-weight:800; }
     .brand-name { font-weight:750; font-size:15px; }
-    .brand-caption { margin-top:3px; color:var(--muted); font-size:10px; }
+    .brand-caption { display:flex; align-items:center; gap:6px; margin-top:3px; color:var(--muted); font-size:10px; }
+    .app-update { padding:2px 0; border:0; background:transparent; color:var(--green); font-size:inherit; font-weight:700; text-decoration:underline; text-underline-offset:2px; }
     .refresh { flex:none; width:42px; height:42px; display:grid; place-items:center; border:1px solid var(--line); border-radius:14px; background:#fff; color:var(--green); font-size:22px; box-shadow:0 3px 10px rgba(35,65,44,.06); }
     .refresh:disabled { opacity:.55; cursor:wait; }
     h1 { margin:0; text-align:center; font-size:clamp(28px,7vw,35px); line-height:1.12; letter-spacing:-1px; color:#17281d; }
@@ -88,7 +89,7 @@
     <header class="brand">
       <div class="brand-info">
         <div class="brand-mark" aria-hidden="true">$</div>
-        <div><div class="brand-name">Finanzas</div><div class="brand-caption">Versión 0.4.4</div></div>
+        <div><div class="brand-name">Finanzas</div><div class="brand-caption"><span>Versión 0.4.5</span><span aria-hidden="true">·</span><button class="app-update" id="appUpdateButton" type="button" title="Buscar y cargar la última versión publicada">Actualizar app</button></div></div>
       </div>
       <button class="refresh" id="refreshButton" type="button" aria-label="Actualizar tasa de la fecha seleccionada">↻</button>
     </header>
@@ -463,7 +464,46 @@
     updateView();
     loadRate();
 
-    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+    let reloadingApp = false;
+    function reloadApp() {
+      if (reloadingApp) return;
+      reloadingApp = true;
+      const address = new URL(window.location.href);
+      address.searchParams.set('actualizar', String(Date.now()));
+      window.location.replace(address.href);
+    }
+    $('appUpdateButton').addEventListener('click', reloadApp);
+
+    if ('serviceWorker' in navigator) {
+      const wasControlled = Boolean(navigator.serviceWorker.controller);
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!wasControlled || reloadingApp) return;
+        const editingAmount = document.activeElement === $('usdAmount') || document.activeElement === $('vesAmount');
+        if (entryStarted || editingAmount) {
+          $('appUpdateButton').textContent = 'Nueva versión';
+          $('appUpdateButton').title = 'Cargar la nueva versión al terminar de calcular';
+          return;
+        }
+        reloadApp();
+      });
+
+      const appRegistration = navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' })
+        .catch(error => {
+          console.warn('No se pudo registrar la actualización de la app:', error);
+          return null;
+        });
+      async function checkForAppUpdate() {
+        const registration = await appRegistration;
+        if (!registration) return;
+        try { await registration.update(); }
+        catch (error) { console.warn('No se pudo consultar una nueva versión:', error); }
+      }
+      checkForAppUpdate();
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') checkForAppUpdate();
+      });
+      window.addEventListener('online', checkForAppUpdate);
+    }
   </script>
 </body>
 </html>
