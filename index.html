@@ -39,7 +39,7 @@
     .currency-field.is-active { margin-inline:-8px; padding-inline:8px; border-bottom-color:var(--green); border-radius:9px 9px 0 0; background:rgba(139,219,77,.09); }
     .currency-field.is-locked { opacity:.48; }
     .currency-code { color:#f1f4f0; font-size:15px; font-weight:750; }
-    .amount-input { width:100%; min-width:0; padding:14px 0; border:0; outline:0; background:transparent; color:var(--ink); caret-color:transparent; text-align:right; font-size:23px; font-weight:650; font-variant-numeric:tabular-nums; user-select:none; }
+    .amount-input { width:100%; min-width:0; padding:14px 0; border:0; outline:0; background:transparent; color:var(--ink); caret-color:transparent; text-align:right; font-size:23px; font-weight:650; font-variant-numeric:tabular-nums; -webkit-user-select:none; user-select:none; }
     .amount-input::placeholder { color:#727c74; }
     .amount-input:focus-visible { outline:none; }
     .converter-actions { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:11px; }
@@ -65,7 +65,7 @@
     <header class="brand">
       <div class="brand-info">
         <div class="brand-mark" aria-hidden="true">$</div>
-        <div><div class="brand-name">Finanzas Familia</div><div class="brand-caption">Conversor de monedas · versión 0.2.0 · build 2026.10.08</div></div>
+        <div><div class="brand-name">Finanzas Familia</div><div class="brand-caption">Conversor de monedas · versión 0.2.1 · build 2026.10.08</div></div>
       </div>
       <button class="refresh" id="refreshButton" type="button" aria-label="Actualizar tasa de la fecha seleccionada">↻</button>
     </header>
@@ -140,7 +140,7 @@
     function formatEntryDigits() {
       const input = $(activeCurrency === 'USD' ? 'usdAmount' : 'vesAmount');
       input.value = fmt(Number(entryDigits || '0') / 100);
-      input.select();
+      input.setSelectionRange(input.value.length, input.value.length);
     }
 
     function selectCurrency(currency) {
@@ -152,8 +152,10 @@
         activeCurrency = currency;
         entryStarted = false;
         entryDigits = '';
+        $(currency === 'USD' ? 'usdAmount' : 'vesAmount').value = fmt(0);
         syncCurrencySelection();
         $('conversionHint').textContent = `Escribiendo ${currency === 'USD' ? 'dólares' : 'bolívares'}. Pulsa Reiniciar para cambiar de campo.`;
+        updateView();
       }
       return true;
     }
@@ -316,7 +318,7 @@
           input.blur();
           return;
         }
-        input.select();
+        input.setSelectionRange(input.value.length, input.value.length);
       });
       input.addEventListener('beforeinput', applyDigitInput);
       input.addEventListener('paste', event => {

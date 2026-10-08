@@ -1,4 +1,4 @@
-const CACHE = 'finanzas-calculadora-v10';
+const CACHE = 'finanzas-calculadora-v11';
 const APP_SHELL = ['./', './index.html', './manifest.webmanifest', './icon.svg', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', event => {
