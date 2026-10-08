@@ -88,7 +88,7 @@
     <header class="brand">
       <div class="brand-info">
         <div class="brand-mark" aria-hidden="true">$</div>
-        <div><div class="brand-name">Finanzas</div><div class="brand-caption">Versión 0.4.3</div></div>
+        <div><div class="brand-name">Finanzas</div><div class="brand-caption">Versión 0.4.4</div></div>
       </div>
       <button class="refresh" id="refreshButton" type="button" aria-label="Actualizar tasa de la fecha seleccionada">↻</button>
     </header>
@@ -179,18 +179,23 @@
         $('conversionHint').textContent = `${activeCurrency === 'USD' ? 'USD' : 'Bs'} está seleccionado. Pulsa Reiniciar para elegir el otro monto.`;
         return false;
       }
-      if (!entryStarted) {
+      if (!entryStarted && activeCurrency !== currency) {
         activeCurrency = currency;
         entryDigits = '';
         $('usdAmount').value = fmt(0);
         $('vesAmount').value = fmt(0);
         updateView();
       }
+      syncCurrencySelection();
       return true;
     }
 
     function applyDigitInput(event) {
-      if (!activeCurrency) return;
+      const currency = event.currentTarget.id === 'usdAmount' ? 'USD' : 'VES';
+      if (!selectCurrency(currency)) {
+        event.preventDefault();
+        return;
+      }
       const isDigit = event.inputType === 'insertText' && /^\d$/.test(event.data || '');
       const isDelete = event.inputType === 'deleteContentBackward' || event.inputType === 'deleteContentForward';
       if (!isDigit && !isDelete) return;
@@ -394,8 +399,8 @@
       });
       input.addEventListener('beforeinput', applyDigitInput);
       input.addEventListener('paste', event => {
-        if (activeCurrency !== currency) return;
         event.preventDefault();
+        if (!selectCurrency(currency)) return;
         const pastedDigits = (event.clipboardData?.getData('text') || '').replace(/\D/g, '');
         if (!pastedDigits) return;
         if (!entryStarted) {
@@ -407,9 +412,9 @@
         updateView();
       });
       input.addEventListener('input', event => {
-        if (activeCurrency !== currency) return;
         // Fallback for mobile keyboards that do not emit a cancellable beforeinput event.
         const digits = event.target.value.replace(/\D/g, '');
+        if (activeCurrency !== currency && !selectCurrency(currency)) return;
         if (!entryStarted) {
           const insertedDigit = event.data != null
             ? /\d/.test(event.data)
@@ -428,10 +433,16 @@
         updateView();
       });
       input.closest('.currency-field').addEventListener('pointerdown', event => {
-        if (entryStarted && activeCurrency && activeCurrency !== currency) {
+        if (!selectCurrency(currency)) {
           event.preventDefault();
-          $('conversionHint').textContent = `${activeCurrency === 'USD' ? 'USD' : 'Bs'} está seleccionado. Pulsa Reiniciar para elegir el otro monto.`;
         }
+      });
+      input.closest('.currency-field').addEventListener('click', event => {
+        if (!selectCurrency(currency)) {
+          event.preventDefault();
+          return;
+        }
+        input.focus({ preventScroll: true });
       });
     });
     $('resetButton').addEventListener('click', resetConverter);
