@@ -1,7 +1,9 @@
 {
-  "name": "Finanzas Familia",
-  "short_name": "Finanzas",
-  "start_url": ".",
+  "name": "Finanzas Familia · Calculadora",
+  "short_name": "Calculadora",
+  "start_url": "./",
+  "scope": "./",
+  "description": "Calculadora de bolívares a dólares usando la tasa BCV vigente.",
   "display": "standalone",
   "background_color": "#0f1420",
   "theme_color": "#0f1420",
