@@ -36,11 +36,16 @@
     .rate-status.error { color:var(--danger); }
     .converter { margin-top:17px; padding:17px 18px; border:1px solid #343a36; border-radius:21px; background:var(--panel); box-shadow:0 12px 28px rgba(0,0,0,.15); }
     .currency-field { display:grid; grid-template-columns:49px minmax(0,1fr); align-items:center; gap:10px; min-height:61px; border-bottom:1px solid #616863; }
+    .currency-field.is-active { margin-inline:-8px; padding-inline:8px; border-bottom-color:var(--green); border-radius:9px 9px 0 0; background:rgba(139,219,77,.09); }
+    .currency-field.is-locked { opacity:.48; }
     .currency-code { color:#f1f4f0; font-size:15px; font-weight:750; }
-    .amount-input { width:100%; min-width:0; padding:14px 0; border:0; outline:0; background:transparent; color:var(--ink); text-align:right; font-size:23px; font-weight:650; font-variant-numeric:tabular-nums; }
+    .amount-input { width:100%; min-width:0; padding:14px 0; border:0; outline:0; background:transparent; color:var(--ink); caret-color:transparent; text-align:right; font-size:23px; font-weight:650; font-variant-numeric:tabular-nums; user-select:none; }
     .amount-input::placeholder { color:#727c74; }
-    .amount-input:focus-visible { outline:2px solid var(--green); outline-offset:4px; border-radius:4px; }
-    .conversion-hint { margin:10px 0 0; color:var(--muted); text-align:center; font-size:10.5px; }
+    .amount-input:focus-visible { outline:none; }
+    .converter-actions { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:11px; }
+    .conversion-hint { margin:0; color:var(--muted); font-size:10.5px; line-height:1.4; }
+    .reset-button { flex:none; min-height:38px; padding:0 12px; border:1px solid var(--line); border-radius:11px; background:var(--panel-soft); color:var(--green); font-size:12px; font-weight:700; }
+    .reset-button:active { transform:scale(.97); }
     .date-section { margin-top:16px; }
     .date-label { display:block; margin-bottom:7px; color:#dce3dc; font-size:11px; font-weight:700; }
     .date-control { width:100%; min-height:49px; padding:0 13px; border:1px solid var(--line); border-radius:14px; background:var(--panel-soft); color:var(--green); color-scheme:dark; font-size:14px; font-weight:700; }
@@ -60,7 +65,7 @@
     <header class="brand">
       <div class="brand-info">
         <div class="brand-mark" aria-hidden="true">$</div>
-        <div><div class="brand-name">Finanzas Familia</div><div class="brand-caption">Conversor de monedas · versión 0.1.0 · build 2026.10.08</div></div>
+        <div><div class="brand-name">Finanzas Familia</div><div class="brand-caption">Conversor de monedas · versión 0.2.0 · build 2026.10.08</div></div>
       </div>
       <button class="refresh" id="refreshButton" type="button" aria-label="Actualizar tasa de la fecha seleccionada">↻</button>
     </header>
@@ -81,15 +86,18 @@
       </section>
 
       <section class="converter" aria-label="Conversión entre dólares y bolívares">
-        <div class="currency-field">
+        <div class="currency-field" data-currency="USD">
           <label class="currency-code" for="usdAmount">USD</label>
           <input class="amount-input" id="usdAmount" type="text" inputmode="numeric" autocomplete="off" value="1,00" aria-label="Monto en dólares estadounidenses">
         </div>
-        <div class="currency-field">
+        <div class="currency-field" data-currency="VES">
           <label class="currency-code" for="vesAmount">Bs</label>
-          <input class="amount-input" id="vesAmount" type="text" inputmode="decimal" autocomplete="off" placeholder="0,00" aria-label="Monto en bolívares">
+          <input class="amount-input" id="vesAmount" type="text" inputmode="numeric" autocomplete="off" placeholder="0,00" aria-label="Monto en bolívares">
         </div>
-        <p class="conversion-hint">Edita cualquiera de los dos montos para convertirlo.</p>
+        <div class="converter-actions">
+          <p class="conversion-hint" id="conversionHint" role="status">Toca USD o Bs para elegir el monto que vas a escribir.</p>
+          <button class="reset-button" id="resetButton" type="button">↺ Reiniciar</button>
+        </div>
       </section>
 
       <section class="date-section" aria-labelledby="dateLabel">
@@ -113,26 +121,57 @@
     const fmt = (value, digits = 2) => value.toLocaleString('es-VE', { minimumFractionDigits: digits, maximumFractionDigits: digits });
     let selectedRate = null;
     let rateState = 'loading';
-    let activeCurrency = 'USD';
-    let usdEntryActive = false;
-    let usdDigits = '';
+    let activeCurrency = null;
+    let entryStarted = false;
+    let entryDigits = '';
     let requestNumber = 0;
 
-    function formatUsdDigits() {
-      const cents = Number(usdDigits || '0');
-      $('usdAmount').value = fmt(cents / 100);
+    function syncCurrencySelection() {
+      document.querySelectorAll('.currency-field').forEach(field => {
+        const currency = field.dataset.currency;
+        const input = $(currency === 'USD' ? 'usdAmount' : 'vesAmount');
+        const isActive = currency === activeCurrency;
+        field.classList.toggle('is-active', isActive);
+        field.classList.toggle('is-locked', Boolean(activeCurrency) && !isActive);
+        input.readOnly = Boolean(activeCurrency) && !isActive;
+      });
     }
 
-    function applyUsdDigitInput(event) {
-      if (!usdEntryActive) return;
+    function formatEntryDigits() {
+      const input = $(activeCurrency === 'USD' ? 'usdAmount' : 'vesAmount');
+      input.value = fmt(Number(entryDigits || '0') / 100);
+      input.select();
+    }
+
+    function selectCurrency(currency) {
+      if (activeCurrency && activeCurrency !== currency) {
+        $('conversionHint').textContent = `${activeCurrency === 'USD' ? 'USD' : 'Bs'} está seleccionado. Pulsa Reiniciar para elegir el otro monto.`;
+        return false;
+      }
+      if (!activeCurrency) {
+        activeCurrency = currency;
+        entryStarted = false;
+        entryDigits = '';
+        syncCurrencySelection();
+        $('conversionHint').textContent = `Escribiendo ${currency === 'USD' ? 'dólares' : 'bolívares'}. Pulsa Reiniciar para cambiar de campo.`;
+      }
+      return true;
+    }
+
+    function applyDigitInput(event) {
+      if (!activeCurrency) return;
       const isDigit = event.inputType === 'insertText' && /^\d$/.test(event.data || '');
       const isDelete = event.inputType === 'deleteContentBackward' || event.inputType === 'deleteContentForward';
       if (!isDigit && !isDelete) return;
 
       event.preventDefault();
-      if (isDelete) usdDigits = usdDigits.slice(0, -1);
-      else usdDigits = `${usdDigits}${event.data}`.replace(/^0+(?=\d)/, '').slice(0, 15);
-      formatUsdDigits();
+      if (!entryStarted) {
+        entryDigits = '';
+        entryStarted = true;
+      }
+      if (isDelete) entryDigits = entryDigits.slice(0, -1);
+      else entryDigits = `${entryDigits}${event.data}`.replace(/^0+(?=\d)/, '').slice(0, 15);
+      formatEntryDigits();
       updateView();
     }
 
@@ -169,8 +208,9 @@
     function convertFromActiveField() {
       const usdInput = $('usdAmount');
       const vesInput = $('vesAmount');
-      const source = activeCurrency === 'USD' ? usdInput : vesInput;
-      const target = activeCurrency === 'USD' ? vesInput : usdInput;
+      const sourceCurrency = activeCurrency || 'USD';
+      const source = sourceCurrency === 'USD' ? usdInput : vesInput;
+      const target = sourceCurrency === 'USD' ? vesInput : usdInput;
       if (!selectedRate) {
         target.value = '';
         return;
@@ -180,7 +220,7 @@
         target.value = '';
         return;
       }
-      target.value = fmt(activeCurrency === 'USD' ? amount * selectedRate.USD : amount / selectedRate.USD);
+      target.value = fmt(sourceCurrency === 'USD' ? amount * selectedRate.USD : amount / selectedRate.USD);
     }
 
     function updateView() {
@@ -215,6 +255,7 @@
 
       refresh.disabled = rateState === 'loading' || rateState === 'refreshing';
       refresh.classList.toggle('spin', refresh.disabled);
+      syncCurrencySelection();
       convertFromActiveField();
     }
 
@@ -255,36 +296,60 @@
       updateView();
     }
 
-    $('usdAmount').addEventListener('focus', () => {
-      activeCurrency = 'USD';
-      usdEntryActive = true;
-      usdDigits = '';
-      formatUsdDigits();
+    function resetConverter() {
+      activeCurrency = null;
+      entryStarted = false;
+      entryDigits = '';
+      $('usdAmount').value = fmt(1);
+      $('vesAmount').value = '';
+      $('conversionHint').textContent = 'Toca USD o Bs para elegir el monto que vas a escribir.';
+      syncCurrencySelection();
       updateView();
-    });
-    $('usdAmount').addEventListener('beforeinput', applyUsdDigitInput);
-    $('usdAmount').addEventListener('paste', event => {
-      if (!usdEntryActive) return;
-      event.preventDefault();
-      const pastedDigits = (event.clipboardData?.getData('text') || '').replace(/\D/g, '');
-      usdDigits = `${usdDigits}${pastedDigits}`.replace(/^0+(?=\d)/, '').slice(0, 15);
-      formatUsdDigits();
-      updateView();
-    });
-    $('usdAmount').addEventListener('input', event => {
-      if (usdEntryActive) {
-        // Fallback for keyboards that do not emit a cancellable beforeinput event.
-        const digits = event.target.value.replace(/\D/g, '');
-        if (digits !== usdDigits) {
-          usdDigits = digits.slice(-15);
-          formatUsdDigits();
+      $('usdAmount').blur();
+      $('vesAmount').blur();
+    }
+
+    ['USD', 'VES'].forEach(currency => {
+      const input = $(currency === 'USD' ? 'usdAmount' : 'vesAmount');
+      input.addEventListener('focus', () => {
+        if (!selectCurrency(currency)) {
+          input.blur();
+          return;
         }
-      }
-      activeCurrency = 'USD';
-      updateView();
+        input.select();
+      });
+      input.addEventListener('beforeinput', applyDigitInput);
+      input.addEventListener('paste', event => {
+        if (activeCurrency !== currency) return;
+        event.preventDefault();
+        if (!entryStarted) {
+          entryDigits = '';
+          entryStarted = true;
+        }
+        const pastedDigits = (event.clipboardData?.getData('text') || '').replace(/\D/g, '');
+        entryDigits = `${entryDigits}${pastedDigits}`.replace(/^0+(?=\d)/, '').slice(0, 15);
+        formatEntryDigits();
+        updateView();
+      });
+      input.addEventListener('input', event => {
+        if (activeCurrency !== currency) return;
+        // Fallback for mobile keyboards that do not emit a cancellable beforeinput event.
+        if (!entryStarted) entryStarted = true;
+        const digits = event.target.value.replace(/\D/g, '');
+        if (digits !== entryDigits) {
+          entryDigits = digits.slice(-15);
+          formatEntryDigits();
+        }
+        updateView();
+      });
+      input.closest('.currency-field').addEventListener('pointerdown', event => {
+        if (activeCurrency && activeCurrency !== currency) {
+          event.preventDefault();
+          $('conversionHint').textContent = `${activeCurrency === 'USD' ? 'USD' : 'Bs'} está seleccionado. Pulsa Reiniciar para elegir el otro monto.`;
+        }
+      });
     });
-    $('usdAmount').addEventListener('blur', () => { usdEntryActive = false; });
-    $('vesAmount').addEventListener('input', () => { activeCurrency = 'VES'; updateView(); });
+    $('resetButton').addEventListener('click', resetConverter);
     $('selectedDate').addEventListener('change', () => loadRate());
     $('refreshButton').addEventListener('click', () => loadRate());
     window.addEventListener('online', () => loadRate());
