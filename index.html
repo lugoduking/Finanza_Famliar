@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
   <meta name="theme-color" content="#f3f6f2">
   <meta name="description" content="Convierte dólares y bolívares con la tasa BCV de la fecha que elijas.">
   <link rel="manifest" href="manifest.webmanifest">
@@ -24,38 +24,82 @@
     .refresh { flex:none; width:42px; height:42px; display:grid; place-items:center; border:1px solid var(--line); border-radius:14px; background:#fff; color:var(--green); font-size:22px; box-shadow:0 3px 10px rgba(35,65,44,.06); }
     .refresh:disabled { opacity:.55; cursor:wait; }
     h1 { margin:0; text-align:center; font-size:clamp(28px,7vw,35px); line-height:1.12; letter-spacing:-1px; color:#17281d; }
-    .intro { margin:7px 0 19px; color:var(--muted); text-align:center; font-size:13px; line-height:1.55; }
-    .rate-card { padding:18px; border:1px solid #d8e6da; border-radius:23px; background:linear-gradient(145deg,#fff 0,#f8fbf7 100%); box-shadow:0 12px 30px rgba(34,70,43,.09); }
+    .intro { display:none; }
+    .rate-card { padding:14px 16px; border:1px solid #d8e6da; border-radius:23px; background:linear-gradient(145deg,#fff 0,#f8fbf7 100%); box-shadow:0 12px 30px rgba(34,70,43,.09); }
     .rate-topline { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; }
     .eyebrow { color:#637468; font-size:10px; font-weight:800; letter-spacing:.8px; }
     .rate-value { margin-top:5px; color:#267147; font-size:clamp(31px,8vw,39px); font-weight:800; letter-spacing:-1px; line-height:1.1; }
     .rate-unit { padding-bottom:4px; color:var(--muted); font-size:11px; }
-    .rate-date-row { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:16px; padding:12px 12px 12px 14px; border:1px solid #e0ebe1; border-radius:15px; background:#edf5ed; }
+    .rate-date-row { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:10px; padding:8px 10px 8px 12px; border:1px solid #e0ebe1; border-radius:15px; background:#edf5ed; }
     .rate-date { margin:0; color:#213d2a; font-size:15px; font-weight:780; line-height:1.35; letter-spacing:-.15px; }
-    .date-picker-control { position:relative; flex:none; width:44px; height:44px; }
+    .date-picker-control { position:relative; flex:none; width:40px; height:40px; }
     .date-picker-button { width:100%; height:100%; display:grid; place-items:center; border:0; border-radius:13px; background:#28794a; color:#fff; box-shadow:0 4px 10px rgba(40,121,74,.18); pointer-events:none; }
     .date-picker-button svg { width:20px; height:20px; }
     .native-date-input { position:absolute; inset:0; z-index:2; width:100%; height:100%; margin:0; opacity:0; cursor:pointer; }
-    .rate-updated { margin:11px 2px 0; color:var(--muted); font-size:10px; line-height:1.45; }
-    .rate-status { min-height:15px; margin:6px 2px 0; color:#52665a; font-size:10px; line-height:1.45; }
+    .rate-updated { margin:8px 2px 0; color:var(--muted); font-size:10px; line-height:1.4; }
+    .rate-status { min-height:0; margin:4px 2px 0; color:#52665a; font-size:10px; line-height:1.4; }
     .rate-status.error { color:var(--danger); }
     .date-note { margin:8px 2px 0; color:var(--muted); font-size:10px; line-height:1.45; }
-    .converter { margin-top:15px; padding:14px 18px 15px; border:1px solid #e0e7e1; border-radius:21px; background:var(--panel); box-shadow:0 9px 24px rgba(34,70,43,.07); scroll-margin-top:8px; }
-    .currency-field { display:grid; grid-template-columns:49px minmax(0,1fr); align-items:center; gap:10px; min-height:61px; border-bottom:1px solid #e1e7e2; }
+    .converter { margin-top:10px; padding:8px 15px 10px; border:1px solid #e0e7e1; border-radius:21px; background:var(--panel); box-shadow:0 9px 24px rgba(34,70,43,.07); }
+    .currency-field { display:grid; grid-template-columns:49px minmax(0,1fr); align-items:center; gap:10px; min-height:51px; border-bottom:1px solid #e1e7e2; }
     .currency-field.is-active { margin-inline:-8px; padding-inline:8px; border-bottom-color:var(--green); border-radius:9px 9px 0 0; background:#edf5ed; }
     .currency-field.is-locked { opacity:.48; }
     .currency-code { color:#37493c; font-size:15px; font-weight:800; }
-    .amount-input { width:100%; min-width:0; padding:14px 0; border:0; outline:0; background:transparent; color:#1d2b22; caret-color:transparent; text-align:right; font-size:24px; font-weight:700; font-variant-numeric:tabular-nums; -webkit-user-select:none; user-select:none; }
+    .amount-input { width:100%; min-width:0; padding:8px 0; border:0; outline:0; background:transparent; color:#1d2b22; caret-color:transparent; text-align:right; font-size:22px; font-weight:700; font-variant-numeric:tabular-nums; -webkit-user-select:none; user-select:none; }
     .amount-input::placeholder { color:#87948a; }
     .amount-input:focus-visible { outline:none; }
-    .converter-actions { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:11px; }
+    .converter-actions { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:7px; }
     .conversion-hint { margin:0; color:var(--muted); font-size:10.5px; line-height:1.4; }
     .reset-button { flex:none; min-height:38px; padding:0 12px; border:1px solid #d7e5d9; border-radius:11px; background:#edf5ed; color:#267147; font-size:12px; font-weight:750; }
     .reset-button:active { transform:scale(.97); }
     .footnote { margin:auto 0 0; padding-top:24px; text-align:center; color:var(--muted); font-size:10.5px; line-height:1.5; }
     .spin { animation:spin .8s linear infinite; }
     @keyframes spin { to { transform:rotate(360deg); } }
-    @media (max-width:380px) { .page { padding-left:14px; padding-right:14px; }.rate-card { padding:15px; }.converter { padding:12px 15px 14px; }.brand { margin-bottom:19px; }.rate-date { font-size:13.5px; }.converter-actions { align-items:flex-end; } }
+    @media (max-width:700px) {
+      body.keyboard-open { overflow:hidden; }
+      .page { min-height:0; padding:7px 14px 8px; }
+      .brand { margin-bottom:8px; }
+      .brand-mark { width:34px; height:34px; border-radius:12px; }
+      .refresh { width:36px; height:36px; }
+      h1 { margin:0 0 7px; font-size:23px; line-height:1.1; }
+      .rate-card { padding:10px 12px; border-radius:17px; box-shadow:0 5px 15px rgba(34,70,43,.07); }
+      .eyebrow { font-size:9px; }
+      .rate-value { margin-top:2px; font-size:29px; }
+      .rate-unit { font-size:10px; }
+      .rate-date-row { margin-top:6px; padding:5px 7px 5px 9px; border-radius:12px; }
+      .rate-date { font-size:13px; }
+      .date-picker-control { width:34px; height:34px; }
+      .date-picker-button { border-radius:10px; }
+      .date-picker-button svg { width:17px; height:17px; }
+      .rate-updated { margin-top:5px; font-size:9px; }
+      .rate-status { margin-top:2px; font-size:9px; }
+      .converter { margin-top:7px; padding:5px 11px 7px; border-radius:16px; box-shadow:0 5px 14px rgba(34,70,43,.06); }
+      .currency-field { grid-template-columns:39px minmax(0,1fr); min-height:43px; gap:6px; }
+      .currency-code { font-size:13px; }
+      .amount-input { padding:5px 0; font-size:20px; }
+      .converter-actions { margin-top:5px; }
+      .conversion-hint { font-size:9px; }
+      .reset-button { min-height:32px; padding:0 9px; font-size:11px; }
+      .date-note, .footnote { display:none; }
+      body.keyboard-open .page { padding-top:3px; }
+      body.keyboard-open .brand { margin-bottom:4px; }
+      body.keyboard-open .brand-mark { width:28px; height:28px; font-size:16px; }
+      body.keyboard-open .brand-caption { display:none; }
+      body.keyboard-open .refresh { width:30px; height:30px; }
+      body.keyboard-open h1 { margin-bottom:4px; font-size:19px; }
+      body.keyboard-open .rate-card { padding:7px 9px; border-radius:13px; }
+      body.keyboard-open .rate-value { font-size:24px; }
+      body.keyboard-open .rate-date-row { margin-top:4px; padding:3px 5px 3px 7px; }
+      body.keyboard-open .rate-date { font-size:11px; }
+      body.keyboard-open .date-picker-control { width:28px; height:28px; }
+      body.keyboard-open .rate-updated, body.keyboard-open .rate-status { display:none; }
+      body.keyboard-open .converter { margin-top:5px; padding:3px 9px 5px; }
+      body.keyboard-open .currency-field { min-height:37px; }
+      body.keyboard-open .amount-input { font-size:18px; }
+      body.keyboard-open .converter-actions { margin-top:3px; }
+      body.keyboard-open .reset-button { min-height:28px; }
+    }
+    @media (max-width:380px) { .page { padding-left:12px; padding-right:12px; }.rate-date { font-size:12.5px; }.converter-actions { align-items:center; } }
     @media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:.01ms!important; transition-duration:.01ms!important; } }
   </style>
 </head>
@@ -64,15 +108,13 @@
     <header class="brand">
       <div class="brand-info">
         <div class="brand-mark" aria-hidden="true">$</div>
-        <div><div class="brand-name">Finanzas</div><div class="brand-caption">Versión 0.3.9</div></div>
+        <div><div class="brand-name">Finanzas</div><div class="brand-caption">Versión 0.4.0</div></div>
       </div>
       <button class="refresh" id="refreshButton" type="button" aria-label="Actualizar tasa de la fecha seleccionada">↻</button>
     </header>
 
     <section aria-labelledby="pageTitle">
       <h1 id="pageTitle">Calculadora</h1>
-      <p class="intro">Convierte entre dólares y bolívares con la tasa BCV del día que elijas.</p>
-
       <section class="rate-card" aria-live="polite" aria-label="Tasa BCV de la fecha seleccionada">
         <div class="rate-topline">
           <div>
@@ -128,45 +170,23 @@
     let entryStarted = false;
     let entryDigits = '';
     let requestNumber = 0;
-    let scrollBeforeAmountEdit = null;
-    let mobileKeyboardVisible = false;
     let normalViewportHeight = window.visualViewport?.height || window.innerHeight;
 
     function isAmountFieldFocused() {
       return document.activeElement === $('usdAmount') || document.activeElement === $('vesAmount');
     }
 
-    function revealConverterOnMobile() {
+    function setKeyboardLayout(active) {
       if (!window.matchMedia('(max-width: 700px)').matches) return;
-      if (scrollBeforeAmountEdit === null) scrollBeforeAmountEdit = window.scrollY;
-      requestAnimationFrame(() => {
-        const converter = $('converter');
-        const top = converter.getBoundingClientRect().top + window.scrollY - 8;
-        window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
-      });
-    }
-
-    function restorePageAfterAmountEdit() {
-      if (scrollBeforeAmountEdit === null) return;
-      const top = scrollBeforeAmountEdit;
-      scrollBeforeAmountEdit = null;
-      mobileKeyboardVisible = false;
-      window.scrollTo({ top, behavior: 'smooth' });
+      document.body.classList.toggle('keyboard-open', active);
     }
 
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', () => {
         const viewportHeight = window.visualViewport.height;
         const keyboardIsOpen = isAmountFieldFocused() && viewportHeight < normalViewportHeight - 100;
-        if (keyboardIsOpen) {
-          mobileKeyboardVisible = true;
-          revealConverterOnMobile();
-        } else if (mobileKeyboardVisible && !keyboardIsOpen) {
-          restorePageAfterAmountEdit();
-          normalViewportHeight = viewportHeight;
-        } else if (!isAmountFieldFocused()) {
-          normalViewportHeight = viewportHeight;
-        }
+        setKeyboardLayout(keyboardIsOpen || (isAmountFieldFocused() && viewportHeight === normalViewportHeight));
+        if (!isAmountFieldFocused() || !keyboardIsOpen) normalViewportHeight = viewportHeight;
       });
     }
 
@@ -406,16 +426,11 @@
           return;
         }
         input.setSelectionRange(input.value.length, input.value.length);
-        if (window.matchMedia('(max-width: 700px)').matches) {
-          revealConverterOnMobile();
-          window.setTimeout(() => {
-            if (document.activeElement === input) revealConverterOnMobile();
-          }, 300);
-        }
+        setKeyboardLayout(true);
       });
       input.addEventListener('blur', () => {
         window.setTimeout(() => {
-          if (!isAmountFieldFocused()) restorePageAfterAmountEdit();
+          if (!isAmountFieldFocused()) setKeyboardLayout(false);
         }, 120);
       });
       input.addEventListener('beforeinput', applyDigitInput);
