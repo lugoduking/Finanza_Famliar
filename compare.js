@@ -61,6 +61,11 @@ function renderComparisonRates() {
     : comparisonBcvState === 'loading' ? 'Consultando…' : 'Hora de registro no disponible';
 
   $('comparisonUsdtValue').textContent = comparisonQuote ? `Bs ${fmt(comparisonQuote.price, 3)}` : '—';
+  $('comparisonUsdtDate').textContent = comparisonQuote
+    ? `Consultada: ${new Date(comparisonQuote.observedAt).toLocaleString('es-VE', {
+      timeZone: 'America/Caracas', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false
+    })}`
+    : comparisonQuoteState === 'loading' ? 'Consultando…' : 'Consulta pendiente';
   $('comparisonUsdtUpdated').textContent = comparisonQuote
     ? `Consultada: ${comparisonTime(comparisonQuote.observedAt)} · Venezuela`
     : comparisonQuoteState === 'loading' ? 'Consultando…' : 'Pendiente de consultar';
@@ -74,7 +79,7 @@ function renderComparisonRates() {
   $('comparisonRateStatus').hidden = messages.length === 0;
   $('comparisonRateStatus').textContent = messages.join(' ');
   $('refreshComparison').disabled = comparisonLoading;
-  $('refreshComparison').textContent = comparisonLoading ? 'Consultando…' : '↻ Actualizar tasas';
+  $('refreshComparisonLabel').textContent = comparisonLoading ? 'Consultando…' : 'Actualizar';
   if (!$('comparisonPanel').hidden) {
     $('refreshButton').disabled = comparisonLoading;
     $('refreshButton').classList.toggle('spin', comparisonLoading);
@@ -85,6 +90,7 @@ function renderComparisonRates() {
 function setComparisonMessage(title, description, warning = false) {
   $('comparisonResult').classList.toggle('is-empty', !warning);
   $('comparisonResult').classList.toggle('is-warning', warning);
+  delete $('comparisonResult').dataset.winner;
   $('comparisonVerdict').textContent = title;
   $('comparisonSaving').textContent = description;
   $('comparisonBreakdown').hidden = true;
@@ -103,17 +109,17 @@ function updateComparison() {
     ? Math.round((bcvMode ? local * comparisonBcv.USD : local) * 100) / 100
     : null;
 
-  $('localPriceLabel').textContent = bcvMode ? 'Precio en dólares a tasa BCV' : 'Pago directo en bolívares';
+  $('localPriceLabel').textContent = bcvMode ? 'Precio en USD · tasa BCV' : 'Monto directo en bolívares';
   $('localPriceUnit').textContent = bcvMode ? 'USD' : 'Bs';
   $('localPriceHelp').textContent = bcvMode
     ? 'Escribe el precio en dólares; se convierte a bolívares.'
     : 'Escribe el monto final que la tienda cobra en bolívares.';
-  $('cashPriceTotal').textContent = cashBs !== null ? `Equivalente Binance: Bs ${fmt(cashBs)}`
-    : cash === null ? 'Equivalente Binance: —'
-    : comparisonLoading ? 'Consultando la tasa Binance…' : 'Actualiza Binance para ver el equivalente en Bs';
-  const localTotalLabel = bcvMode ? 'Total a pagar (BCV)' : 'Total a pagar';
-  $('localPriceTotal').textContent = localBs !== null ? `${localTotalLabel}: Bs ${fmt(localBs)}`
-    : bcvMode && local !== null ? 'Esperando la tasa BCV de hoy…' : `${localTotalLabel}: —`;
+  $('cashPriceTotal').textContent = cashBs !== null ? `Bs ${fmt(cashBs)}`
+    : cash === null ? '—'
+    : comparisonLoading ? 'Consultando…' : 'Actualiza Binance';
+  $('localPriceTotalLabel').textContent = bcvMode ? 'Total en Bs · BCV' : 'Total en bolívares';
+  $('localPriceTotal').textContent = localBs !== null ? `Bs ${fmt(localBs)}`
+    : bcvMode && local !== null ? 'Tasa pendiente' : '—';
   renderComparisonRates();
 
   if (cash === null || local === null) {
@@ -140,6 +146,7 @@ function updateComparison() {
   const savings = Math.abs(difference) / 100;
   const percent = Math.abs(difference) / Math.max(cashCents, localCents) * 100;
   $('comparisonResult').classList.remove('is-empty', 'is-warning');
+  $('comparisonResult').dataset.winner = difference === 0 ? 'equal' : difference > 0 ? 'bolivares' : 'dollars';
   $('comparisonVerdict').textContent = difference === 0 ? 'Cuestan lo mismo'
     : difference > 0 ? 'Conviene pagar en bolívares' : 'Conviene pagar en dólares';
   $('comparisonSaving').textContent = difference === 0
