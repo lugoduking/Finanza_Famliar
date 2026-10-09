@@ -4,19 +4,20 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#f3f6f2">
-  <meta name="description" content="Convierte dólares y bolívares con la tasa BCV de la fecha que elijas.">
+  <meta name="description" content="Convierte dólares y bolívares y compara pagos con las tasas BCV y USDT de Binance.">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg">
-  <title>Calculadora · Finanzas</title>
+  <title>Finanzas · Calculadora y pagos</title>
   <style>
-    :root { color-scheme:light; --bg:#f3f6f2; --panel:#fff; --panel-soft:#f0f5ef; --ink:#1b2921; --muted:#66756b; --green:#28794a; --green-bright:#347f4d; --green-dark:#d3e4d7; --line:#dce5dd; --danger:#b9382b; }
+    :root { color-scheme:light; --bg:#f3f6f2; --panel:#fff; --panel-soft:#f0f5ef; --ink:#1b2921; --muted:#66756b; --green:#28794a; --green-bright:#347f4d; --green-dark:#d3e4d7; --line:#dce5dd; --danger:#b9382b; --money-keypad-height:172px; }
     * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
     html,body { margin:0; min-height:100%; background:var(--bg); color:var(--ink); font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif; }
     body { min-height:100dvh; background:radial-gradient(ellipse at 50% -180px,#e0efdf 0,transparent 470px),var(--bg); }
     button,input { font:inherit; }
     button { cursor:pointer; }
+    [hidden] { display:none!important; }
     .page { width:min(100%,520px); min-height:100dvh; margin:0 auto; padding:clamp(20px,5vh,42px) 18px calc(22px + env(safe-area-inset-bottom)); display:flex; flex-direction:column; }
-    .brand { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:22px; }
+    .brand { flex:none; display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:22px; }
     .brand-info { display:flex; align-items:center; gap:11px; }
     .brand-mark { width:40px; height:40px; display:grid; place-items:center; border:2px solid var(--green); border-radius:15px; background:#e6f1e7; color:var(--green); font-size:20px; font-weight:800; }
     .brand-name { font-weight:750; font-size:15px; }
@@ -24,6 +25,10 @@
     .app-update { padding:2px 0; border:0; background:transparent; color:var(--green); font-size:inherit; font-weight:700; text-decoration:underline; text-underline-offset:2px; }
     .refresh { flex:none; width:42px; height:42px; display:grid; place-items:center; border:1px solid var(--line); border-radius:14px; background:#fff; color:var(--green); font-size:22px; box-shadow:0 3px 10px rgba(35,65,44,.06); }
     .refresh:disabled { opacity:.55; cursor:wait; }
+    .module-nav { display:flex; gap:4px; margin:0 0 16px; padding:4px; border:1px solid var(--line); border-radius:14px; background:#eaf0e8; }
+    .module-tab { flex:1; min-height:38px; padding:7px 10px; border:0; border-radius:10px; background:transparent; color:var(--muted); font-size:13px; font-weight:750; }
+    .module-tab[aria-selected="true"] { background:#fff; color:var(--green); box-shadow:0 2px 7px rgba(34,70,43,.08); }
+    button:focus-visible, .switch-control:has(input:focus-visible) { outline:2px solid var(--green); outline-offset:3px; }
     h1 { margin:0; text-align:center; font-size:clamp(28px,7vw,35px); line-height:1.12; letter-spacing:-1px; color:#17281d; }
     .intro { display:none; }
     .rate-card { padding:14px 16px; border:1px solid #d8e6da; border-radius:23px; background:linear-gradient(145deg,#fff 0,#f8fbf7 100%); box-shadow:0 12px 30px rgba(34,70,43,.09); }
@@ -46,14 +51,67 @@
     .currency-field.is-active { margin-inline:-8px; padding-inline:8px; border-bottom-color:var(--green); border-radius:9px 9px 0 0; background:#edf5ed; }
     .currency-field.is-locked { opacity:.48; }
     .currency-code { color:#37493c; font-size:15px; font-weight:800; }
-    .amount-input { width:100%; min-width:0; padding:8px 0; border:0; outline:0; background:transparent; color:#1d2b22; caret-color:transparent; text-align:right; font-size:22px; font-weight:700; font-variant-numeric:tabular-nums; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
+    .amount-input { width:100%; min-width:0; padding:8px 0; border:0; outline:0; background:transparent; color:#1d2b22; caret-color:transparent; text-align:right; font-size:22px; font-weight:700; font-variant-numeric:tabular-nums; cursor:pointer; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
     .amount-input::placeholder { color:#87948a; }
     .amount-input:focus-visible { outline:none; }
     .converter-actions { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:7px; }
     .conversion-hint { margin:0; color:var(--muted); font-size:10.5px; line-height:1.4; }
     .reset-button { flex:none; min-height:38px; padding:0 12px; border:1px solid #d7e5d9; border-radius:11px; background:#edf5ed; color:#267147; font-size:12px; font-weight:750; }
     .reset-button:active { transform:scale(.97); }
+    .comparison-panel h1 { margin-bottom:14px; }
+    .price-card { padding:15px; border:1px solid var(--line); border-radius:20px; background:var(--panel); box-shadow:0 7px 20px rgba(34,70,43,.06); }
+    .price-card + .price-card { margin-top:10px; }
+    .price-label { display:block; color:#3e5145; font-size:12px; font-weight:750; }
+    .price-entry { display:flex; align-items:center; gap:10px; margin-top:4px; border-bottom:1px solid var(--line); }
+    .price-entry:focus-within, .price-entry.is-selected { border-bottom-color:var(--green); background:#f2f7f1; border-radius:8px 8px 0 0; }
+    .price-unit { flex:none; color:var(--green); font-size:14px; font-weight:800; }
+    .price-input { font-size:26px; padding:7px 2px; }
+    .price-input::placeholder { color:#a6b0a7; }
+    .switch-row { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:10px; }
+    .switch-control { position:relative; display:inline-flex; align-items:center; gap:9px; cursor:pointer; color:#41594a; font-size:12px; font-weight:650; }
+    .switch-control input { position:absolute; left:0; width:40px; height:24px; margin:0; opacity:0; cursor:pointer; }
+    .switch-track { flex:none; width:40px; height:24px; padding:3px; border-radius:20px; background:#a6b2a8; pointer-events:none; transition:background .15s; }
+    .switch-track::after { content:''; display:block; width:18px; height:18px; border-radius:50%; background:#fff; box-shadow:0 1px 3px #0002; transition:transform .15s; }
+    .switch-control input:checked + .switch-track { background:var(--green); }
+    .switch-control input:checked + .switch-track::after { transform:translateX(16px); }
+    .price-help { margin:8px 0 0; color:var(--muted); font-size:10.5px; line-height:1.45; }
+    .price-equivalent { margin:7px 0 0; color:#355440; font-size:12px; font-weight:700; min-height:17px; text-align:right; line-height:1.45; font-variant-numeric:tabular-nums; }
+    .comparison-panel > .result-card { margin-top:10px; }
+    .result-card { padding:15px; border:1px solid #d2e5d7; border-radius:20px; background:#e7f3e9; }
+    .result-card.is-empty { background:#fff; border-style:dashed; }
+    .result-card.is-warning { background:#fff6e8; border-color:#e8d4ac; }
+    .result-kicker { margin:0 0 5px; color:#526b5a; font-size:10px; font-weight:750; text-transform:uppercase; letter-spacing:.7px; }
+    .result-card h2 { margin:0; color:#226b42; font-size:20px; line-height:1.2; letter-spacing:-.4px; }
+    .result-card.is-empty h2, .result-card.is-warning h2 { color:var(--ink); font-size:16px; }
+    .result-description { margin:7px 0 0; color:#42644d; font-size:12px; line-height:1.4; }
+    .cost-breakdown { display:grid; gap:8px; margin:13px 0 0; padding-top:11px; border-top:1px solid #cfe1d3; }
+    .cost-breakdown > div { display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
+    .cost-breakdown dt { color:#49634f; font-size:11px; }
+    .cost-breakdown dd { margin:0; color:#26462f; font-size:14px; font-weight:750; font-variant-numeric:tabular-nums; }
+    .comparison-rates { margin-top:15px; }
+    .rates-heading { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; }
+    .rates-heading h2 { margin:0; font-size:12px; color:#52675a; }
+    .rates-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .rate-tile { min-width:0; padding:12px; border:1px solid var(--line); border-radius:15px; background:#fff; }
+    .rate-tile.binance { background:#fffaf0; border-color:#ebdfc5; }
+    .rate-tile-label { margin:0; font-size:10px; color:var(--muted); font-weight:750; }
+    .rate-tile-value { margin:5px 0; font-size:18px; font-weight:800; font-variant-numeric:tabular-nums; letter-spacing:-.3px; }
+    .rate-tile-note { margin:0; color:var(--muted); font-size:9px; line-height:1.5; overflow-wrap:anywhere; }
+    .comparison-note { margin:10px 2px 0; color:var(--muted); font-size:10px; line-height:1.5; }
+    .comparison-status { margin:7px 2px 0; color:var(--danger); font-size:11px; line-height:1.45; }
+    .page[data-module="comparison"] .footnote { display:none; }
     .footnote { margin:auto 0 0; padding-top:24px; text-align:center; color:var(--muted); font-size:10.5px; line-height:1.5; }
+    .page[data-keypad-open="true"] { height:100dvh; min-height:0; overflow:hidden; padding-bottom:calc(var(--money-keypad-height) + 12px + env(safe-area-inset-bottom)); }
+    .page[data-keypad-open="true"] .module-panel { flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; }
+    .money-keypad { position:fixed; z-index:20; left:50%; bottom:0; transform:translateX(-50%); width:min(100%,520px); height:calc(var(--money-keypad-height) + env(safe-area-inset-bottom)); padding:6px max(14px,env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left)); border-top:1px solid #cddccd; border-radius:18px 18px 0 0; background:#e9f0e7; box-shadow:0 -5px 20px rgba(34,70,43,.1); }
+    .keypad-heading { margin:0 0 4px; color:#536b59; text-align:center; font-size:10px; font-weight:750; line-height:14px; }
+    .keypad-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); grid-template-rows:repeat(3,44px); gap:4px; }
+    .keypad-key { min-width:0; min-height:44px; padding:0; display:grid; place-items:center; border:1px solid #d5e2d4; border-radius:10px; background:#fff; color:#233d2b; font-size:23px; font-weight:650; touch-action:manipulation; }
+    .keypad-key:active { background:#d3e8d5; }
+    .keypad-key svg { width:22px; height:22px; }
+    .keypad-key.action { background:#dce8da; color:#315c3e; }
+    .keypad-key.done { background:var(--green); border-color:var(--green); color:#fff; font-size:12px; font-weight:750; }
+    .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
     .spin { animation:spin .8s linear infinite; }
     @keyframes spin { to { transform:rotate(360deg); } }
     @media (max-width:700px) {
@@ -61,6 +119,14 @@
       body { position:fixed; inset:0; width:100%; }
       .page { position:absolute; inset:0; width:min(100%,520px); height:100%; min-height:0; margin:0 auto; padding:10px 14px 12px; overflow:hidden; }
       .brand { margin-bottom:12px; }
+      .module-nav { flex:none; margin-bottom:12px; }
+      .module-tab { min-height:34px; font-size:12px; }
+      .module-panel { flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; padding-bottom:12px; }
+      .comparison-panel { flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; padding-bottom:12px; scrollbar-width:thin; }
+      .comparison-panel h1 { font-size:27px; margin-bottom:12px; }
+      .price-card { padding:10px 14px; border-radius:17px; }
+      .price-input { font-size:24px; }
+      .result-card { padding:11px 14px; border-radius:17px; }
       h1 { margin:0 0 10px; font-size:29px; line-height:1.12; }
       .rate-card { padding:15px; border-radius:20px; box-shadow:0 8px 20px rgba(34,70,43,.08); }
       .eyebrow { font-size:10px; }
@@ -89,12 +155,17 @@
     <header class="brand">
       <div class="brand-info">
         <div class="brand-mark" aria-hidden="true">$</div>
-        <div><div class="brand-name">Finanzas</div><div class="brand-caption"><span>Versión 0.4.6</span><span aria-hidden="true">·</span><button class="app-update" id="appUpdateButton" type="button" title="Buscar y cargar la última versión publicada">Actualizar app</button></div></div>
+        <div><div class="brand-name">Finanzas</div><div class="brand-caption"><span>Versión 0.6.0</span><span aria-hidden="true">·</span><button class="app-update" id="appUpdateButton" type="button" title="Buscar y cargar la última versión publicada">Actualizar app</button></div></div>
       </div>
       <button class="refresh" id="refreshButton" type="button" aria-label="Actualizar tasa de la fecha seleccionada">↻</button>
     </header>
 
-    <section aria-labelledby="pageTitle">
+    <nav class="module-nav" role="tablist" aria-label="Herramientas de Finanzas">
+      <button class="module-tab" id="calculatorTab" type="button" role="tab" aria-selected="true" aria-controls="calculatorPanel">Calculadora</button>
+      <button class="module-tab" id="comparisonTab" type="button" role="tab" aria-selected="false" aria-controls="comparisonPanel" tabindex="-1">Comparar pagos</button>
+    </nav>
+
+    <section class="module-panel" id="calculatorPanel" role="tabpanel" aria-labelledby="calculatorTab">
       <h1 id="pageTitle">Calculadora</h1>
       <section class="rate-card" aria-live="polite" aria-label="Tasa BCV de la fecha seleccionada">
         <div class="rate-topline">
@@ -122,11 +193,11 @@
       <section class="converter" id="converter" aria-label="Conversión entre dólares y bolívares">
         <div class="currency-field" data-currency="USD">
           <label class="currency-code" for="usdAmount">USD</label>
-          <input class="amount-input" id="usdAmount" type="text" inputmode="numeric" autocomplete="off" value="1,00" aria-label="Monto en dólares estadounidenses">
+          <input class="amount-input" id="usdAmount" type="text" inputmode="none" readonly autocomplete="off" value="1,00" aria-label="Monto en dólares estadounidenses" aria-controls="moneyKeypad" aria-expanded="false">
         </div>
         <div class="currency-field" data-currency="VES">
           <label class="currency-code" for="vesAmount">Bs</label>
-          <input class="amount-input" id="vesAmount" type="text" inputmode="numeric" autocomplete="off" placeholder="0,00" aria-label="Monto en bolívares">
+          <input class="amount-input" id="vesAmount" type="text" inputmode="none" readonly autocomplete="off" placeholder="0,00" aria-label="Monto en bolívares" aria-controls="moneyKeypad" aria-expanded="false">
         </div>
         <div class="converter-actions">
           <p class="conversion-hint" id="conversionHint" role="status">Toca USD o Bs para elegir el monto que vas a escribir.</p>
@@ -137,7 +208,87 @@
       <p class="date-note">Puedes consultar hasta mañana. En fines de semana o feriados puede aplicar la última tasa BCV publicada.</p>
     </section>
 
+    <section class="module-panel comparison-panel" id="comparisonPanel" role="tabpanel" aria-labelledby="comparisonTab" hidden>
+      <h1>Comparar pagos</h1>
+
+      <div class="price-card">
+        <label class="price-label" for="cashPrice">Pago en dólares · Efectivo</label>
+        <div class="price-entry">
+          <span class="price-unit" aria-hidden="true">USD</span>
+          <input class="amount-input price-input" id="cashPrice" type="text" inputmode="none" readonly autocomplete="off" placeholder="0,00" aria-describedby="cashPriceTotal cashPriceHelp" maxlength="22" aria-controls="moneyKeypad" aria-expanded="false">
+        </div>
+        <p class="price-equivalent" id="cashPriceTotal">Equivalente Binance: —</p>
+        <p class="price-help" id="cashPriceHelp">Precio de la tienda si pagas en dólares.</p>
+      </div>
+
+      <div class="price-card">
+        <label class="price-label" id="localPriceLabel" for="localPrice">Precio en dólares a tasa BCV</label>
+        <div class="price-entry">
+          <span class="price-unit" id="localPriceUnit" aria-hidden="true">USD</span>
+          <input class="amount-input price-input" id="localPrice" type="text" inputmode="none" readonly autocomplete="off" placeholder="0,00" aria-describedby="localPriceHelp localPriceTotal" maxlength="22" aria-controls="moneyKeypad" aria-expanded="false">
+        </div>
+        <p class="price-equivalent" id="localPriceTotal">Total a pagar (BCV): —</p>
+        <div class="switch-row">
+          <label class="switch-control" for="equivalentBcvToggle">
+            <input id="equivalentBcvToggle" type="checkbox" role="switch" checked>
+            <span class="switch-track" aria-hidden="true"></span>
+            <span>Equivalente a BCV</span>
+          </label>
+          <button class="reset-button" id="resetComparison" type="button">↺ Reiniciar</button>
+        </div>
+        <p class="price-help" id="localPriceHelp">Escribe el precio en dólares; se convierte a bolívares.</p>
+      </div>
+
+      <section class="result-card is-empty" id="comparisonResult" aria-live="polite" aria-atomic="true">
+        <p class="result-kicker">Comparación estimada</p>
+        <h2 id="comparisonVerdict">Escribe los dos precios</h2>
+        <p class="result-description" id="comparisonSaving">Verás cuál cuesta menos según las tasas utilizadas.</p>
+        <dl class="cost-breakdown" id="comparisonBreakdown" hidden>
+          <div><dt>Dólares · referencia</dt><dd id="cashCost">—</dd></div>
+          <div><dt>Bolívares · equivalente</dt><dd id="localCost">—</dd></div>
+        </dl>
+      </section>
+
+      <section class="comparison-rates" aria-labelledby="comparisonRatesTitle">
+        <div class="rates-heading"><h2 id="comparisonRatesTitle">Tasas utilizadas</h2><button class="app-update" id="refreshComparison" type="button">↻ Actualizar tasas</button></div>
+        <div class="rates-grid">
+          <div class="rate-tile">
+            <p class="rate-tile-label">BCV · 1 USD</p>
+            <p class="rate-tile-value" id="comparisonBcvValue">—</p>
+            <p class="rate-tile-note" id="comparisonBcvDate">Tasa del día de hoy</p>
+            <p class="rate-tile-note" id="comparisonBcvUpdated">Pendiente de consultar</p>
+          </div>
+          <div class="rate-tile binance">
+            <p class="rate-tile-label">Binance · 1 USDT</p>
+            <p class="rate-tile-value" id="comparisonUsdtValue">—</p>
+            <p class="rate-tile-note">Referencia para vender USDT</p>
+            <p class="rate-tile-note" id="comparisonUsdtUpdated">Pendiente de consultar</p>
+          </div>
+        </div>
+        <p class="comparison-status" id="comparisonRateStatus" role="status" hidden></p>
+      </section>
+      <p class="comparison-note">Referencia: 1 USD = 1 USDT. Sin comisiones. La tasa P2P puede variar según el banco y el monto del anuncio.</p>
+    </section>
+
     <p class="footnote">Conversión referencial. Verifica la tasa aplicada antes de realizar operaciones importantes.</p>
+    <section class="money-keypad" id="moneyKeypad" role="group" aria-labelledby="keypadHeading" hidden>
+      <p class="keypad-heading" id="keypadHeading">Teclado numérico</p>
+      <div class="keypad-grid">
+        <button class="keypad-key" type="button" data-money-key="1" aria-label="1">1</button>
+        <button class="keypad-key" type="button" data-money-key="2" aria-label="2">2</button>
+        <button class="keypad-key" type="button" data-money-key="3" aria-label="3">3</button>
+        <button class="keypad-key action" type="button" data-money-key="delete" aria-label="Borrar último dígito"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5h11a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H9L2 12Z"/><path d="m12 9 6 6m0-6-6 6"/></svg></button>
+        <button class="keypad-key" type="button" data-money-key="4" aria-label="4">4</button>
+        <button class="keypad-key" type="button" data-money-key="5" aria-label="5">5</button>
+        <button class="keypad-key" type="button" data-money-key="6" aria-label="6">6</button>
+        <button class="keypad-key done" type="button" data-money-key="done">Listo</button>
+        <button class="keypad-key" type="button" data-money-key="7" aria-label="7">7</button>
+        <button class="keypad-key" type="button" data-money-key="8" aria-label="8">8</button>
+        <button class="keypad-key" type="button" data-money-key="9" aria-label="9">9</button>
+        <button class="keypad-key" type="button" data-money-key="0" aria-label="0">0</button>
+      </div>
+      <p class="sr-only" id="keypadAnnouncement" aria-live="polite" aria-atomic="true"></p>
+    </section>
   </main>
 
   <script>
@@ -160,7 +311,8 @@
         const isLocked = entryStarted && Boolean(activeCurrency) && !isActive;
         field.classList.toggle('is-active', isActive);
         field.classList.toggle('is-locked', isLocked);
-        input.readOnly = isLocked;
+        // Values are edited by the app keypad, so the system keyboard stays closed.
+        input.readOnly = true;
       });
       $('conversionHint').textContent = !activeCurrency
         ? 'Toca USD o Bs para elegir el monto que vas a escribir.'
@@ -191,24 +343,22 @@
       return true;
     }
 
-    function applyDigitInput(event) {
-      const currency = event.currentTarget.id === 'usdAmount' ? 'USD' : 'VES';
-      if (!selectCurrency(currency)) {
-        event.preventDefault();
-        return;
-      }
-      const isDigit = event.inputType === 'insertText' && /^\d$/.test(event.data || '');
-      const isDelete = event.inputType === 'deleteContentBackward' || event.inputType === 'deleteContentForward';
+    function applyCalculatorKey(currency, key) {
+      if (!selectCurrency(currency)) return;
+      const isDigit = /^\d$/.test(key);
+      const isDelete = key === 'delete';
       if (!isDigit && !isDelete) return;
-
-      if (!event.cancelable) return;
-      event.preventDefault();
       if (isDigit && !entryStarted) {
         entryDigits = '';
         entryStarted = true;
       }
-      if (isDelete) entryDigits = entryDigits.slice(0, -1);
-      else entryDigits = `${entryDigits}${event.data}`.replace(/^0+(?=\d)/, '').slice(0, 15);
+      if (isDelete) {
+        entryDigits = entryDigits.slice(0, -1);
+        if (!entryStarted) {
+          $('usdAmount').value = fmt(0);
+          $('vesAmount').value = fmt(0);
+        }
+      } else entryDigits = `${entryDigits}${key}`.replace(/^0+(?=\d)/, '').slice(0, 15);
       formatEntryDigits();
       updateView();
     }
@@ -316,8 +466,10 @@
       else if (rateState === 'error') status.textContent = 'No se pudo consultar esta fecha. Revisa la conexión e inténtalo otra vez.';
       else status.textContent = selectedRate ? 'Tasa consultada correctamente.' : '';
 
-      refresh.disabled = rateState === 'loading' || rateState === 'refreshing';
-      refresh.classList.toggle('spin', refresh.disabled);
+      if (!$('calculatorPanel').hidden) {
+        refresh.disabled = rateState === 'loading' || rateState === 'refreshing';
+        refresh.classList.toggle('spin', refresh.disabled);
+      }
       syncCurrencySelection();
       convertFromActiveField();
     }
@@ -398,7 +550,6 @@
           return;
         }
       });
-      input.addEventListener('beforeinput', applyDigitInput);
       input.addEventListener('paste', event => {
         event.preventDefault();
         if (!selectCurrency(currency)) return;
@@ -410,32 +561,6 @@
         }
         entryDigits = `${entryDigits}${pastedDigits}`.replace(/^0+(?=\d)/, '').slice(0, 15);
         formatEntryDigits();
-        updateView();
-      });
-      input.addEventListener('input', event => {
-        // Fallback for mobile keyboards that do not emit a cancellable beforeinput event.
-        const digits = event.target.value.replace(/\D/g, '');
-        if (activeCurrency !== currency && !selectCurrency(currency)) return;
-        if (!entryStarted) {
-          const insertedDigit = event.data != null
-            ? /\d/.test(event.data)
-            : event.inputType?.startsWith('insert') && digits.length > 0;
-          if (!insertedDigit) {
-            input.value = fmt(0);
-            updateView();
-            return;
-          }
-          entryStarted = true;
-          entryDigits = (event.data != null ? event.data.replace(/\D/g, '') : digits)
-            .replace(/^0+(?=\d)/, '').slice(0, 15);
-          formatEntryDigits();
-          updateView();
-          return;
-        }
-        if (digits !== entryDigits) {
-          entryDigits = digits.slice(-15);
-          formatEntryDigits();
-        }
         updateView();
       });
       input.closest('.currency-field').addEventListener('pointerdown', event => {
@@ -457,6 +582,7 @@
     });
     $('resetButton').addEventListener('click', resetConverter);
     $('selectedDate').addEventListener('click', event => {
+      closeMoneyKeypad();
       const datePicker = event.currentTarget;
       syncDateLimit();
       if (typeof datePicker.showPicker !== 'function') return;
@@ -465,7 +591,10 @@
       catch (error) { datePicker.focus({ preventScroll: true }); }
     });
     $('selectedDate').addEventListener('change', () => loadRate());
-    $('refreshButton').addEventListener('click', () => loadRate());
+    $('refreshButton').addEventListener('click', () => {
+      if ($('calculatorPanel').hidden) loadComparisonRates();
+      else loadRate();
+    });
     window.addEventListener('online', () => loadRate());
 
     $('selectedDate').value = todayInCaracas();
@@ -487,8 +616,9 @@
       const wasControlled = Boolean(navigator.serviceWorker.controller);
       navigator.serviceWorker.addEventListener('controllerchange', () => {
         if (!wasControlled || reloadingApp) return;
-        const editingAmount = document.activeElement === $('usdAmount') || document.activeElement === $('vesAmount');
-        if (entryStarted || editingAmount) {
+        const editingAmount = ['usdAmount', 'vesAmount', 'cashPrice', 'localPrice'].some(id => document.activeElement === $(id));
+        const comparingPrices = typeof hasComparisonEdits === 'function' && hasComparisonEdits();
+        if (entryStarted || editingAmount || comparingPrices) {
           $('appUpdateButton').textContent = 'Nueva versión';
           $('appUpdateButton').title = 'Cargar la nueva versión al terminar de calcular';
           return;
@@ -514,5 +644,7 @@
       window.addEventListener('online', checkForAppUpdate);
     }
   </script>
+  <script src="compare.js"></script>
+  <script src="keypad.js"></script>
 </body>
 </html>

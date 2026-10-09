@@ -1,9 +1,9 @@
 {
-  "name": "Finanzas · Calculadora",
-  "short_name": "Calculadora",
+  "name": "Finanzas · Calculadora y pagos",
+  "short_name": "Finanzas",
   "start_url": "./",
   "scope": "./",
-  "description": "Calculadora de bolívares a dólares usando la tasa BCV vigente.",
+  "description": "Calculadora BCV y comparación de pagos en dólares y bolívares con la referencia USDT de Binance.",
   "display": "standalone",
   "background_color": "#f3f6f2",
   "theme_color": "#f3f6f2",
