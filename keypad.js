@@ -59,6 +59,14 @@ function closeMoneyKeypad() {
 function writeMoneyKey(key) {
   if (key === 'done') { closeMoneyKeypad(); return; }
   if (!moneyKeypadTarget || $('moneyKeypad').hidden) return;
+  if (key === 'reset') {
+    const inputId = moneyKeypadTarget;
+    const resetId = ['usdAmount', 'vesAmount'].includes(inputId) ? 'resetButton' : 'resetComparison';
+    $(resetId).click();
+    openMoneyKeypad(inputId);
+    $('keypadAnnouncement').textContent = `Montos reiniciados. ${moneyKeypadFields[inputId].label()}: ${$(inputId).value || '0,00'}`;
+    return;
+  }
   const field = moneyKeypadFields[moneyKeypadTarget];
   if (!field.select()) return;
   field.write(key);

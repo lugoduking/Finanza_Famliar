@@ -145,6 +145,7 @@
     .keypad-key svg { width:22px; height:22px; }
     .keypad-key.action { background:#dce8da; color:#315c3e; }
     .keypad-key.done { background:var(--green); border-color:var(--green); color:#fff; font-size:12px; font-weight:750; }
+    .keypad-key.reset { grid-column:4; grid-row:3; font-size:11px; font-weight:750; }
     .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
     .spin { animation:spin .8s linear infinite; }
     @keyframes spin { to { transform:rotate(360deg); } }
@@ -189,7 +190,7 @@
     <header class="brand">
       <div class="brand-info">
         <div class="brand-mark" aria-hidden="true">$</div>
-        <div><div class="brand-name">Finanzas</div><div class="brand-caption"><span>Versión 0.7.1</span><span aria-hidden="true">·</span><button class="app-update" id="appUpdateButton" type="button" title="Buscar y cargar la última versión publicada">Actualizar app</button></div></div>
+        <div><div class="brand-name">Finanzas</div><div class="brand-caption"><span>Versión 0.7.2</span><span aria-hidden="true">·</span><button class="app-update" id="appUpdateButton" type="button" title="Buscar y cargar la última versión publicada">Actualizar app</button></div></div>
       </div>
       <button class="refresh" id="refreshButton" type="button" aria-label="Actualizar tasa de la fecha seleccionada">↻</button>
     </header>
@@ -350,6 +351,7 @@
         <button class="keypad-key" type="button" data-money-key="5" aria-label="5">5</button>
         <button class="keypad-key" type="button" data-money-key="6" aria-label="6">6</button>
         <button class="keypad-key done" type="button" data-money-key="done">Listo</button>
+        <button class="keypad-key action reset" type="button" data-money-key="reset">Reiniciar</button>
         <button class="keypad-key" type="button" data-money-key="7" aria-label="7">7</button>
         <button class="keypad-key" type="button" data-money-key="8" aria-label="8">8</button>
         <button class="keypad-key" type="button" data-money-key="9" aria-label="9">9</button>
