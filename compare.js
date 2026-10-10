@@ -1,7 +1,8 @@
 'use strict';
 
 // Only public exchange rates leave the browser. Store prices stay in memory.
-const BINANCE_SELL_QUOTE = 'https://www.binance.com/bapi/c2c/v1/public/c2c/agent/quote-price?fiat=VES&asset=USDT&tradeType=SELL';
+const COMPARISON_P2P_SAMPLE_SIZE = 10;
+const BINANCE_SELL_ADS = `https://www.binance.com/bapi/c2c/v1/public/c2c/agent/ad-list?fiat=VES&asset=USDT&tradeType=SELL&limit=${COMPARISON_P2P_SAMPLE_SIZE}`;
 const COMPARISON_QUOTE_MAX_AGE = 5 * 60 * 1000;
 const COMPARISON_MAX_DIGITS = 12;
 const comparisonEntries = { cash: '', bcv: '', bolivares: '' };
@@ -61,6 +62,12 @@ function renderComparisonRates() {
     : comparisonBcvState === 'loading' ? 'Consultando…' : 'Hora de registro no disponible';
 
   $('comparisonUsdtValue').textContent = comparisonQuote ? `Bs ${fmt(comparisonQuote.price, 3)}` : '—';
+  $('comparisonUsdtMethod').textContent = comparisonQuote
+    ? `1 USDT · promedio de ${comparisonQuote.sampleCount}` : '1 USDT · promedio';
+  $('comparisonUsdtSample').textContent = comparisonQuote
+    ? `Promedio aritmético de ${comparisonQuote.sampleCount} anuncios para vender USDT. Rango: Bs ${fmt(comparisonQuote.minimum, 3)}–${fmt(comparisonQuote.maximum, 3)} por USDT. Sin filtro de banco ni monto.`
+    : comparisonQuoteState === 'loading' ? 'Consultando hasta 10 anuncios para vender USDT…'
+    : 'El promedio se calcula con hasta 10 anuncios disponibles para vender USDT.';
   $('comparisonUsdtDate').textContent = comparisonQuote
     ? `Consultada: ${new Date(comparisonQuote.observedAt).toLocaleString('es-VE', {
       timeZone: 'America/Caracas', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false
@@ -74,7 +81,7 @@ function renderComparisonRates() {
   if (comparisonBcvState === 'error') messages.push('No se pudo actualizar la tasa BCV de hoy.');
   if (comparisonBcvState === 'not-found') messages.push('La fuente no tiene una tasa BCV para hoy.');
   if (comparisonBcvState === 'live' && !comparisonBcvIsCurrent()) messages.push('Cambió el día: actualiza la tasa BCV.');
-  if (comparisonQuoteState === 'error') messages.push('No se pudo actualizar Binance. Revisa tu conexión o inténtalo de nuevo.');
+  if (comparisonQuoteState === 'error') messages.push('No se pudo actualizar el promedio de Binance. Revisa tu conexión o inténtalo de nuevo.');
   if (comparisonQuoteState === 'live' && !comparisonQuoteIsCurrent()) messages.push('La referencia de Binance tiene más de 5 minutos. Actualiza las tasas.');
   $('comparisonRateStatus').hidden = messages.length === 0;
   $('comparisonRateStatus').textContent = messages.join(' ');
@@ -87,10 +94,10 @@ function renderComparisonRates() {
   }
 }
 
-function setComparisonMessage(title, description, warning = false) {
+function setComparisonMessage(title, description, warning = false, visuallyHidden = false) {
   $('comparisonResult').classList.toggle('is-empty', !warning);
   $('comparisonResult').classList.toggle('is-warning', warning);
-  $('comparisonResult').classList.remove('sr-only');
+  $('comparisonResult').classList.toggle('sr-only', visuallyHidden);
   delete $('comparisonResult').dataset.winner;
   $('comparisonVerdict').textContent = title;
   $('comparisonSaving').textContent = description;
@@ -136,7 +143,7 @@ function updateComparison() {
   renderComparisonRates();
 
   if (cash === null || local === null) {
-    setComparisonMessage('Escribe los dos precios', 'Verás cuál cuesta menos según las tasas utilizadas.');
+    setComparisonMessage('', '', false, true);
     return;
   }
   if (cash <= 0 || local <= 0) {
@@ -145,7 +152,7 @@ function updateComparison() {
   }
   if ((bcvMode && !canConvertBcv) || !canConvertBinance) {
     setComparisonMessage(comparisonLoading ? 'Consultando las tasas…' : 'Actualiza las tasas para comparar',
-      'El resultado necesita una referencia de Binance reciente' + (bcvMode ? ' y la tasa BCV de hoy.' : '.'), !comparisonLoading);
+      'El resultado necesita un promedio de Binance reciente' + (bcvMode ? ' y la tasa BCV de hoy.' : '.'), !comparisonLoading, comparisonLoading);
     return;
   }
 
@@ -207,14 +214,27 @@ async function fetchComparisonBcv(date) {
 
 async function fetchComparisonUsdt() {
   // SELL is the user's side: sell USDT and receive VES, as documented by Binance.
-  const data = await fetchComparisonJson(BINANCE_SELL_QUOTE);
-  const price = Number(data?.data?.price);
-  if (data?.success !== true || data.code !== '000000' || data.data.asset !== 'USDT'
-    || data.data.fiat !== 'VES' || !Number.isFinite(price) || price <= 0) {
-    throw new Error('Binance returned no valid USDT/VES quote');
+  const data = await fetchComparisonJson(BINANCE_SELL_ADS);
+  if (data?.success !== true || data.code !== '000000' || !Array.isArray(data.data?.items)) {
+    throw new Error('Binance returned no valid ad list');
   }
-  // The response has no publication timestamp; record when this browser received it.
-  return { price, observedAt: Date.now() };
+  // Preserve Binance's result order and give each of the first ten ads equal weight.
+  const items = data.data.items.slice(0, COMPARISON_P2P_SAMPLE_SIZE);
+  if (items.length === 0) throw new Error('Binance returned no available USDT/VES ads');
+  const prices = items.map(item => {
+    const price = Number(item?.price);
+    if (item?.asset !== 'USDT' || item.fiat !== 'VES' || !Number.isFinite(price) || price <= 0) {
+      throw new Error('Binance returned an invalid price in the sample');
+    }
+    return price;
+  });
+  const price = prices.reduce((sum, value) => sum + value, 0) / prices.length;
+  if (!Number.isFinite(price) || price <= 0) throw new Error('Invalid P2P average');
+  // Keep only price statistics. Advertiser and payment details stay out of app state.
+  return {
+    price, sampleCount: prices.length, minimum: Math.min(...prices), maximum: Math.max(...prices),
+    observedAt: Date.now()
+  };
 }
 
 async function loadComparisonRates() {

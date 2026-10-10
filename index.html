@@ -130,7 +130,6 @@
     .rate-details-content { padding:8px 10px; border:1px solid #dde4ef; border-radius:9px; background:#fff; }
     .rate-details-content p { margin:0; font-size:9px; line-height:1.5; }
     .rate-details-content p + p { margin-top:5px; }
-    .comparison-note { margin:10px 2px 0; color:var(--muted); font-size:10px; line-height:1.5; }
     .comparison-status { margin:7px 2px 0; color:var(--danger); font-size:11px; line-height:1.45; }
     .page[data-module="comparison"] .footnote { display:none; }
     .footnote { margin:auto 0 0; padding-top:24px; text-align:center; color:var(--muted); font-size:10.5px; line-height:1.5; }
@@ -158,9 +157,23 @@
       .module-tab { min-height:34px; font-size:12px; }
       .module-panel { flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; padding-bottom:12px; }
       .comparison-panel { flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; padding-bottom:12px; scrollbar-width:thin; }
-      .comparison-panel h1 { font-size:27px; margin-bottom:12px; }
+      .page[data-module="comparison"] .brand { margin-bottom:8px; }
+      .page[data-module="comparison"] .module-nav { margin-bottom:8px; }
+      .comparison-panel h1 { font-size:25px; margin-bottom:8px; }
+      .comparison-rates { margin-bottom:8px; }
+      .rates-heading { margin-bottom:4px; }
+      .rate-tile { padding:8px 10px; }
+      .rate-details { margin-top:4px; }
+      .rate-details summary { min-height:22px; }
       .price-card { grid-template-columns:minmax(0,1fr) 104px; border-radius:16px; }
+      .price-card + .price-card { margin-top:8px; }
       .price-card-body { padding:10px; }
+      .payment-estimate { min-height:124px; padding:6px; gap:2px; }
+      .payment-estimate .cost-number { font-size:20px; }
+      .payment-status { margin-top:4px; padding:3px 5px; }
+      .payment-saving { margin-top:4px; line-height:1.25; }
+      .payment-saving strong { font-size:10px; }
+      .switch-row { margin-top:6px; }
       h1 { margin:0 0 10px; font-size:29px; line-height:1.12; }
       .rate-card { padding:15px; border-radius:20px; box-shadow:0 8px 20px rgba(34,70,43,.08); }
       .eyebrow { font-size:10px; }
@@ -190,7 +203,7 @@
     <header class="brand">
       <div class="brand-info">
         <div class="brand-mark" aria-hidden="true">$</div>
-        <div><div class="brand-name">Finanzas</div><div class="brand-caption"><span>Versión 0.7.2</span><span aria-hidden="true">·</span><button class="app-update" id="appUpdateButton" type="button" title="Buscar y cargar la última versión publicada">Actualizar app</button></div></div>
+        <div><div class="brand-name">Finanzas</div><div class="brand-caption"><span>Versión 0.8.0</span><span aria-hidden="true">·</span><button class="app-update" id="appUpdateButton" type="button" title="Buscar y cargar la última versión publicada">Actualizar app</button></div></div>
       </div>
       <button class="refresh" id="refreshButton" type="button" aria-label="Actualizar tasa de la fecha seleccionada">↻</button>
     </header>
@@ -263,7 +276,7 @@
           </div>
           <div class="rate-tile binance">
             <p class="rate-tile-label">Binance P2P</p>
-            <p class="rate-tile-unit">1 USDT en bolívares</p>
+            <p class="rate-tile-unit" id="comparisonUsdtMethod">1 USDT · promedio</p>
             <p class="rate-tile-value" id="comparisonUsdtValue">—</p>
             <p class="rate-tile-note" id="comparisonUsdtDate">Consulta pendiente</p>
           </div>
@@ -273,6 +286,8 @@
           <div class="rate-details-content">
             <p><strong>BCV · </strong><span id="comparisonBcvUpdated">Pendiente de consultar</span></p>
             <p><strong>Binance · </strong><span id="comparisonUsdtUpdated">Pendiente de consultar</span></p>
+            <p id="comparisonUsdtSample">El promedio se calcula con hasta 10 anuncios disponibles para vender USDT.</p>
+            <p>Referencia: 1 USD = 1 USDT. Sin comisiones. La tasa P2P puede variar según el banco y el monto del anuncio.</p>
           </div>
         </details>
         <p class="comparison-status" id="comparisonRateStatus" role="status" hidden></p>
@@ -331,12 +346,10 @@
         </aside>
       </div>
 
-      <section class="comparison-message is-empty" id="comparisonResult" aria-live="polite" aria-atomic="true">
-        <h2 id="comparisonVerdict">Escribe los dos precios</h2>
-        <p class="result-description" id="comparisonSaving">Verás cuál cuesta menos según las tasas utilizadas.</p>
+      <section class="comparison-message sr-only" id="comparisonResult" aria-live="polite" aria-atomic="true">
+        <h2 id="comparisonVerdict"></h2>
+        <p class="result-description" id="comparisonSaving"></p>
       </section>
-
-      <p class="comparison-note">Referencia: 1 USD = 1 USDT. Sin comisiones. La tasa P2P puede variar según el banco y el monto del anuncio.</p>
     </section>
 
     <p class="footnote">Conversión referencial. Verifica la tasa aplicada antes de realizar operaciones importantes.</p>
