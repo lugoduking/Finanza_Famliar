@@ -90,10 +90,18 @@ function renderComparisonRates() {
 function setComparisonMessage(title, description, warning = false) {
   $('comparisonResult').classList.toggle('is-empty', !warning);
   $('comparisonResult').classList.toggle('is-warning', warning);
+  $('comparisonResult').classList.remove('sr-only');
   delete $('comparisonResult').dataset.winner;
   $('comparisonVerdict').textContent = title;
   $('comparisonSaving').textContent = description;
-  $('comparisonBreakdown').hidden = true;
+  for (const [estimateId, statusId, savingId] of [
+    ['cashEstimate', 'cashPaymentStatus', 'cashSaving'],
+    ['localEstimate', 'localPaymentStatus', 'localSaving']
+  ]) {
+    $(estimateId).classList.remove('is-best', 'is-more-expensive');
+    $(statusId).textContent = 'Por comparar';
+    $(savingId).hidden = true;
+  }
 }
 
 function updateComparison() {
@@ -108,6 +116,11 @@ function updateComparison() {
   const localBs = local !== null && (!bcvMode || canConvertBcv)
     ? Math.round((bcvMode ? local * comparisonBcv.USD : local) * 100) / 100
     : null;
+  const localCents = localBs !== null && canConvertBinance
+    ? Math.round(localBs / comparisonQuote.price * 100) : null;
+  $('cashCost').textContent = cash !== null && cash > 0 ? fmt(cash) : '—';
+  $('localCost').textContent = localCents !== null && localCents > 0 && Number.isSafeInteger(localCents)
+    ? fmt(localCents / 100) : '—';
 
   $('localPriceLabel').textContent = bcvMode ? 'Precio en USD · tasa BCV' : 'Monto directo en bolívares';
   $('localPriceUnit').textContent = bcvMode ? 'USD' : 'Bs';
@@ -137,7 +150,6 @@ function updateComparison() {
   }
 
   const cashCents = Number(comparisonEntries.cash);
-  const localCents = Math.round(localBs / comparisonQuote.price * 100);
   if (!Number.isSafeInteger(localCents) || !Number.isSafeInteger(Math.round(localBs * 100))) {
     setComparisonMessage('El monto es demasiado alto', 'Introduce un precio menor para calcularlo con precisión.', true);
     return;
@@ -146,15 +158,24 @@ function updateComparison() {
   const savings = Math.abs(difference) / 100;
   const percent = Math.abs(difference) / Math.max(cashCents, localCents) * 100;
   $('comparisonResult').classList.remove('is-empty', 'is-warning');
+  $('comparisonResult').classList.add('sr-only');
   $('comparisonResult').dataset.winner = difference === 0 ? 'equal' : difference > 0 ? 'bolivares' : 'dollars';
   $('comparisonVerdict').textContent = difference === 0 ? 'Cuestan lo mismo'
     : difference > 0 ? 'Conviene pagar en bolívares' : 'Conviene pagar en dólares';
   $('comparisonSaving').textContent = difference === 0
     ? 'La diferencia es menor a un centavo con estas tasas.'
     : `Ahorro estimado: ${fmt(savings)} USDT (${fmt(percent)} %).`;
-  $('comparisonBreakdown').hidden = false;
-  $('cashCost').textContent = `${fmt(cash)} USDT`;
-  $('localCost').textContent = `${fmt(localCents / 100)} USDT`;
+  const cashWins = difference < 0;
+  const localWins = difference > 0;
+  $('cashEstimate').classList.toggle('is-best', cashWins);
+  $('cashEstimate').classList.toggle('is-more-expensive', localWins);
+  $('localEstimate').classList.toggle('is-best', localWins);
+  $('localEstimate').classList.toggle('is-more-expensive', cashWins);
+  $('cashPaymentStatus').textContent = difference === 0 ? 'Mismo costo' : cashWins ? 'Más barato' : 'Más caro';
+  $('localPaymentStatus').textContent = difference === 0 ? 'Mismo costo' : localWins ? 'Más barato' : 'Más caro';
+  $('cashSaving').hidden = !cashWins;
+  $('localSaving').hidden = !localWins;
+  $('cashSavingAmount').textContent = $('localSavingAmount').textContent = `${fmt(savings)} USDT`;
 }
 
 async function fetchComparisonJson(address) {
