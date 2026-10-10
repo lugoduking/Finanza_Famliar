@@ -121,6 +121,7 @@
     .rate-tile.binance .rate-tile-unit { color:#896a3a; }
     .rate-tile-value { margin:4px 0; font-size:20px; font-weight:850; font-variant-numeric:tabular-nums; letter-spacing:-.4px; line-height:1.15; overflow-wrap:anywhere; }
     .rate-tile-note { margin:0; color:#526681; font-size:9px; line-height:1.45; overflow-wrap:anywhere; }
+    .rate-tile-note.is-reference { color:#805716; font-weight:750; }
     .rate-tile.binance .rate-tile-note { color:#7f653f; }
     .rate-details { margin-top:6px; color:#627189; font-size:9px; }
     .rate-details summary { min-height:24px; display:flex; align-items:center; gap:5px; list-style:none; cursor:pointer; width:fit-content; }
@@ -203,7 +204,7 @@
     <header class="brand">
       <div class="brand-info">
         <div class="brand-mark" aria-hidden="true">$</div>
-        <div><div class="brand-name">Finanzas</div><div class="brand-caption"><span>Versión 0.8.0</span><span aria-hidden="true">·</span><button class="app-update" id="appUpdateButton" type="button" title="Buscar y cargar la última versión publicada">Actualizar app</button></div></div>
+        <div><div class="brand-name">Finanzas</div><div class="brand-caption"><span>Versión 0.8.1</span><span aria-hidden="true">·</span><button class="app-update" id="appUpdateButton" type="button" title="Buscar y cargar la última versión publicada">Actualizar app</button></div></div>
       </div>
       <button class="refresh" id="refreshButton" type="button" aria-label="Actualizar tasa de la fecha seleccionada">↻</button>
     </header>
@@ -285,6 +286,7 @@
           <summary>Fecha y hora de las tasas</summary>
           <div class="rate-details-content">
             <p><strong>BCV · </strong><span id="comparisonBcvUpdated">Pendiente de consultar</span></p>
+            <p id="comparisonBcvReference">Pendiente de consultar la fecha de la tasa.</p>
             <p><strong>Binance · </strong><span id="comparisonUsdtUpdated">Pendiente de consultar</span></p>
             <p id="comparisonUsdtSample">El promedio se calcula con hasta 10 anuncios disponibles para vender USDT.</p>
             <p>Referencia: 1 USD = 1 USDT. Sin comisiones. La tasa P2P puede variar según el banco y el monto del anuncio.</p>
@@ -338,7 +340,7 @@
         <p class="sr-only" id="localPriceHelp">Escribe el precio en dólares; se convierte a bolívares.</p>
         </div>
         <aside class="payment-estimate" id="localEstimate" aria-label="Costo de pagar en bolívares">
-          <p class="cost-label">Equivalente</p>
+          <p class="cost-label" id="localCostLabel">Equivalente</p>
           <p class="cost-number" id="localCost">—</p>
           <p class="cost-unit">USDT</p>
           <span class="payment-status" id="localPaymentStatus">Por comparar</span>

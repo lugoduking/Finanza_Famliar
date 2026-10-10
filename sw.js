@@ -1,4 +1,4 @@
-const CACHE = 'finanzas-calculadora-v36';
+const CACHE = 'finanzas-calculadora-v37';
 const APP_SHELL = ['./index.html', './compare.js', './keypad.js', './manifest.webmanifest', './icon.svg', './icon-192.png', './icon-512.png'];
 const SHELL_URL = new URL('./index.html', self.registration.scope).href;
 const ROOT_URL = new URL('./', self.registration.scope).href;

@@ -5,9 +5,11 @@ const COMPARISON_P2P_SAMPLE_SIZE = 10;
 const BINANCE_SELL_ADS = `https://www.binance.com/bapi/c2c/v1/public/c2c/agent/ad-list?fiat=VES&asset=USDT&tradeType=SELL&limit=${COMPARISON_P2P_SAMPLE_SIZE}`;
 const COMPARISON_QUOTE_MAX_AGE = 5 * 60 * 1000;
 const COMPARISON_MAX_DIGITS = 12;
+const COMPARISON_BCV_HISTORY_LOOKBACK_DAYS = 14;
 const comparisonEntries = { cash: '', bcv: '', bolivares: '' };
 let comparisonBcv = null;
 let comparisonBcvState = 'idle';
+let comparisonBcvCheckedDate = null;
 let comparisonQuote = null;
 let comparisonQuoteState = 'idle';
 let comparisonLoading = false;
@@ -43,8 +45,53 @@ function comparisonTime(isoDate) {
   });
 }
 
-function comparisonBcvIsCurrent() {
-  return comparisonBcvState === 'live' && comparisonBcv?.date === todayInCaracas();
+function normalizeComparisonBcv(data, latestDate) {
+  const effectiveDate = data?.effective_date || data?.source_date || data?.date;
+  if (typeof effectiveDate !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(effectiveDate)) return null;
+  const parsedDate = new Date(`${effectiveDate}T12:00:00Z`);
+  if (!Number.isFinite(parsedDate.getTime()) || parsedDate.toISOString().slice(0, 10) !== effectiveDate
+    || effectiveDate > latestDate || !Number.isFinite(data.USD) || data.USD <= 0) return null;
+  return {
+    USD: data.USD, date: effectiveDate, effective_date: effectiveDate,
+    source_date: data.source_date || data.date || effectiveDate,
+    updated_at: data.updated_at && Number.isFinite(new Date(data.updated_at).getTime()) ? data.updated_at : null
+  };
+}
+
+function latestComparisonBcv(first, second) {
+  if (!first) return second;
+  if (!second) return first;
+  if (second.date > first.date || (second.date === first.date
+    && (Date.parse(second.updated_at) || 0) > (Date.parse(first.updated_at) || 0))) return second;
+  return first;
+}
+
+function readLatestComparisonBcv(date) {
+  let latest = normalizeComparisonBcv(comparisonBcv, date);
+  try {
+    for (let index = 0; index < localStorage.length; index++) {
+      const key = localStorage.key(index);
+      if (!key?.startsWith(CACHE_PREFIX)) continue;
+      try {
+        const cached = normalizeComparisonBcv(JSON.parse(localStorage.getItem(key)), date);
+        latest = latestComparisonBcv(latest, cached);
+      } catch (error) {}
+    }
+  } catch (error) {}
+  return latest;
+}
+
+function comparisonBcvIsUsable() {
+  return ['live', 'reference', 'saved'].includes(comparisonBcvState)
+    && comparisonBcv && comparisonBcv.date <= todayInCaracas();
+}
+
+function comparisonBcvIsReference() {
+  return Boolean(comparisonBcv && (comparisonBcv.date !== todayInCaracas() || comparisonBcvState === 'saved'));
+}
+
+function comparisonBcvNeedsRefresh() {
+  return comparisonBcvCheckedDate !== todayInCaracas() || !['live', 'reference'].includes(comparisonBcvState);
 }
 
 function comparisonQuoteIsCurrent() {
@@ -55,8 +102,16 @@ function comparisonQuoteIsCurrent() {
 function renderComparisonRates() {
   $('comparisonBcvValue').textContent = comparisonBcv ? `Bs ${fmt(roundRateUpToCents(comparisonBcv.USD))}` : '—';
   $('comparisonBcvDate').textContent = comparisonBcv
-    ? `Fecha: ${formatDate(comparisonBcv.effective_date || comparisonBcv.date)}`
+    ? `${comparisonBcvState === 'saved' ? 'Guardada' : comparisonBcvIsReference() ? 'Referencia' : 'Fecha'}: ${formatDate(comparisonBcv.date)}`
     : `Fecha: ${formatDate(todayInCaracas())}`;
+  $('comparisonBcvDate').classList.toggle('is-reference', comparisonBcvIsReference());
+  $('comparisonBcvReference').textContent = comparisonBcv
+    ? comparisonBcvState === 'saved'
+      ? `No se pudo confirmar un dato nuevo con la fuente. Se usa la última tasa guardada, del ${formatDate(comparisonBcv.date)}, como referencia.`
+      : comparisonBcvIsReference()
+        ? `Se usa la última tasa disponible para hoy o una fecha anterior, del ${formatDate(comparisonBcv.date)}, como referencia. No es una tasa nueva de hoy.`
+        : `La tasa corresponde al ${formatDate(comparisonBcv.date)}.`
+    : 'No hay una tasa BCV disponible para utilizar como referencia.';
   $('comparisonBcvUpdated').textContent = comparisonBcv?.updated_at
     ? `Registrada por la API: ${comparisonTime(comparisonBcv.updated_at)} · Venezuela`
     : comparisonBcvState === 'loading' ? 'Consultando…' : 'Hora de registro no disponible';
@@ -78,9 +133,8 @@ function renderComparisonRates() {
     : comparisonQuoteState === 'loading' ? 'Consultando…' : 'Pendiente de consultar';
 
   const messages = [];
-  if (comparisonBcvState === 'error') messages.push('No se pudo actualizar la tasa BCV de hoy.');
-  if (comparisonBcvState === 'not-found') messages.push('La fuente no tiene una tasa BCV para hoy.');
-  if (comparisonBcvState === 'live' && !comparisonBcvIsCurrent()) messages.push('Cambió el día: actualiza la tasa BCV.');
+  if (comparisonBcvState === 'error') messages.push('No se pudo consultar BCV y no hay una tasa guardada como referencia.');
+  if (comparisonBcvState === 'not-found') messages.push('La fuente no tiene una tasa BCV disponible para hoy ni una referencia anterior en la consulta.');
   if (comparisonQuoteState === 'error') messages.push('No se pudo actualizar el promedio de Binance. Revisa tu conexión o inténtalo de nuevo.');
   if (comparisonQuoteState === 'live' && !comparisonQuoteIsCurrent()) messages.push('La referencia de Binance tiene más de 5 minutos. Actualiza las tasas.');
   $('comparisonRateStatus').hidden = messages.length === 0;
@@ -115,7 +169,8 @@ function updateComparison() {
   const bcvMode = $('equivalentBcvToggle').checked;
   const cash = comparisonAmount('cash');
   const local = comparisonAmount(bcvMode ? 'bcv' : 'bolivares');
-  const canConvertBcv = comparisonBcvIsCurrent();
+  const canConvertBcv = comparisonBcvIsUsable();
+  const usesBcvReference = bcvMode && comparisonBcvIsReference();
   const canConvertBinance = comparisonQuoteIsCurrent();
   const cashBs = cash !== null && canConvertBinance
     ? Math.round(cash * comparisonQuote.price * 100) / 100
@@ -128,6 +183,7 @@ function updateComparison() {
   $('cashCost').textContent = cash !== null && cash > 0 ? fmt(cash) : '—';
   $('localCost').textContent = localCents !== null && localCents > 0 && Number.isSafeInteger(localCents)
     ? fmt(localCents / 100) : '—';
+  $('localCostLabel').textContent = usesBcvReference ? 'Estimado' : 'Equivalente';
 
   $('localPriceLabel').textContent = bcvMode ? 'Precio en USD · tasa BCV' : 'Monto directo en bolívares';
   $('localPriceUnit').textContent = bcvMode ? 'USD' : 'Bs';
@@ -137,7 +193,9 @@ function updateComparison() {
   $('cashPriceTotal').textContent = cashBs !== null ? `Bs ${fmt(cashBs)}`
     : cash === null ? '—'
     : comparisonLoading ? 'Consultando…' : 'Actualiza Binance';
-  $('localPriceTotalLabel').textContent = bcvMode ? 'Total en Bs · BCV' : 'Total en bolívares';
+  $('localPriceTotalLabel').textContent = bcvMode
+    ? usesBcvReference ? 'Bs · referencia BCV' : 'Total en Bs · BCV'
+    : 'Total en bolívares';
   $('localPriceTotal').textContent = localBs !== null ? `Bs ${fmt(localBs)}`
     : bcvMode && local !== null ? 'Tasa pendiente' : '—';
   renderComparisonRates();
@@ -152,7 +210,7 @@ function updateComparison() {
   }
   if ((bcvMode && !canConvertBcv) || !canConvertBinance) {
     setComparisonMessage(comparisonLoading ? 'Consultando las tasas…' : 'Actualiza las tasas para comparar',
-      'El resultado necesita un promedio de Binance reciente' + (bcvMode ? ' y la tasa BCV de hoy.' : '.'), !comparisonLoading, comparisonLoading);
+      'El resultado necesita un promedio de Binance reciente' + (bcvMode ? ' y una tasa BCV disponible.' : '.'), !comparisonLoading, comparisonLoading);
     return;
   }
 
@@ -172,6 +230,7 @@ function updateComparison() {
   $('comparisonSaving').textContent = difference === 0
     ? 'La diferencia es menor a un centavo con estas tasas.'
     : `Ahorro estimado: ${fmt(savings)} USDT (${fmt(percent)} %).`;
+  if (usesBcvReference) $('comparisonSaving').textContent += ` Referencia BCV del ${formatDate(comparisonBcv.date)}.`;
   const cashWins = difference < 0;
   const localWins = difference > 0;
   $('cashEstimate').classList.toggle('is-best', cashWins);
@@ -197,18 +256,22 @@ async function fetchComparisonJson(address) {
 }
 
 async function fetchComparisonBcv(date) {
-  for (const address of [`${API_ROOT}/rate.json`, `${API_ROOT}/history/${date}.json`]) {
-    const data = await fetchComparisonJson(address);
-    if (!data) continue;
-    // A rate published for tomorrow must not be applied to a payment today.
-    const matchesDate = data.date === date || data.effective_date === date;
-    if (!matchesDate || (data.effective_date && data.effective_date > date)
-      || !Number.isFinite(data.USD) || data.USD <= 0) continue;
-    return {
-      USD: data.USD, date, source_date: data.date,
-      effective_date: data.effective_date || data.date, updated_at: data.updated_at || null
-    };
+  let latestError = null;
+  try {
+    const latest = normalizeComparisonBcv(await fetchComparisonJson(`${API_ROOT}/rate.json`), date);
+    if (latest) return latest;
+  } catch (error) { latestError = error; }
+
+  // The latest endpoint can already contain tomorrow's rate. Look backwards,
+  // retaining the record's effective date rather than relabeling it as today.
+  for (let offset = 0; offset <= COMPARISON_BCV_HISTORY_LOOKBACK_DAYS; offset++) {
+    const historyDate = new Date(`${date}T12:00:00Z`);
+    historyDate.setUTCDate(historyDate.getUTCDate() - offset);
+    const day = historyDate.toISOString().slice(0, 10);
+    const candidate = normalizeComparisonBcv(await fetchComparisonJson(`${API_ROOT}/history/${day}.json`), date);
+    if (candidate) return candidate;
   }
+  if (latestError) throw latestError;
   return null;
 }
 
@@ -242,7 +305,7 @@ async function loadComparisonRates() {
   const request = ++comparisonRequest;
   const date = todayInCaracas();
   comparisonLoading = true;
-  if (comparisonBcv?.date !== date) comparisonBcv = readCached(date);
+  comparisonBcv = readLatestComparisonBcv(date);
   comparisonBcvState = 'loading';
   comparisonQuoteState = 'loading';
   updateComparison();
@@ -252,9 +315,13 @@ async function loadComparisonRates() {
   const [bcvResult, usdtResult] = results;
   if (bcvResult.status === 'fulfilled' && bcvResult.value) {
     comparisonBcv = bcvResult.value;
-    comparisonBcvState = 'live';
-    try { localStorage.setItem(CACHE_PREFIX + date, JSON.stringify(comparisonBcv)); } catch (error) {}
-  } else comparisonBcvState = bcvResult.status === 'fulfilled' ? 'not-found' : 'error';
+    comparisonBcvState = comparisonBcv.date === date ? 'live' : 'reference';
+    comparisonBcvCheckedDate = date;
+    try { localStorage.setItem(CACHE_PREFIX + comparisonBcv.date, JSON.stringify(comparisonBcv)); } catch (error) {}
+  } else {
+    comparisonBcv = readLatestComparisonBcv(date);
+    comparisonBcvState = comparisonBcv ? 'saved' : bcvResult.status === 'fulfilled' ? 'not-found' : 'error';
+  }
   if (usdtResult.status === 'fulfilled') {
     comparisonQuote = usdtResult.value;
     comparisonQuoteState = 'live';
@@ -278,7 +345,7 @@ function showFinanceModule(moduleName, focusTab = false) {
   if (focusTab) $(compare ? 'comparisonTab' : 'calculatorTab').focus({ preventScroll: true });
   if (compare) {
     updateComparison();
-    if (!comparisonLoading && (!comparisonBcvIsCurrent() || !comparisonQuoteIsCurrent())) loadComparisonRates();
+    if (!comparisonLoading && (comparisonBcvNeedsRefresh() || !comparisonQuoteIsCurrent())) loadComparisonRates();
   } else {
     $('refreshButton').setAttribute('aria-label', 'Actualizar tasa de la fecha seleccionada');
     updateView();
@@ -345,10 +412,13 @@ window.addEventListener('online', () => {
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && !$('comparisonPanel').hidden) {
     updateComparison();
-    if (!comparisonLoading && (!comparisonBcvIsCurrent() || !comparisonQuoteIsCurrent())) loadComparisonRates();
+    if (!comparisonLoading && (comparisonBcvNeedsRefresh() || !comparisonQuoteIsCurrent())) loadComparisonRates();
   }
 });
 setInterval(() => {
-  if (document.visibilityState === 'visible' && !$('comparisonPanel').hidden) updateComparison();
+  if (document.visibilityState === 'visible' && !$('comparisonPanel').hidden) {
+    updateComparison();
+    if (!comparisonLoading && comparisonBcvCheckedDate && comparisonBcvCheckedDate !== todayInCaracas()) loadComparisonRates();
+  }
 }, 30000);
 updateComparison();
