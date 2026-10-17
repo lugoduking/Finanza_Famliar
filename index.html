@@ -9,7 +9,7 @@
   <link rel="icon" href="icon.svg">
   <title>Finanzas · Calculadora y pagos</title>
   <style>
-    :root { color-scheme:light; --bg:#f3f6f2; --panel:#fff; --panel-soft:#f0f5ef; --ink:#1b2921; --muted:#66756b; --green:#28794a; --green-bright:#347f4d; --green-dark:#d3e4d7; --line:#dce5dd; --danger:#b9382b; --money-keypad-height:220px; --quick-calculator-height:132px; }
+    :root { color-scheme:light; --bg:#f3f6f2; --panel:#fff; --panel-soft:#f0f5ef; --ink:#1b2921; --muted:#66756b; --green:#28794a; --green-bright:#347f4d; --green-dark:#d3e4d7; --line:#dce5dd; --danger:#b9382b; --money-keypad-height:220px; --quick-calculator-height:92px; }
     * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
     html,body { margin:0; min-height:100%; background:var(--bg); color:var(--ink); font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif; }
     body { min-height:100dvh; background:radial-gradient(ellipse at 50% -180px,#e0efdf 0,transparent 470px),var(--bg); }
@@ -149,16 +149,17 @@
     .keypad-key.reset { grid-column:4; grid-row:3; font-size:11px; font-weight:750; }
     .keypad-key.calculate { grid-column:4; grid-row:4; display:flex; justify-content:center; gap:4px; background:#dce8da; color:#244e32; font-size:11px; font-weight:750; }
     .keypad-key.calculate svg { flex:none; width:16px; height:16px; }
-    .keypad-key.decimal { grid-column:1; grid-row:4; }
+    .keypad-key.decimal { grid-column:3; grid-row:4; }
+    .keypad-key.clear { grid-column:1; grid-row:4; font-size:11px; font-weight:750; }
     .keypad-key.operator { grid-column:4; background:#dce8da; color:#285938; font-size:25px; }
-    .keypad-key.operator.divide { grid-row:1; }
-    .keypad-key.operator.multiply { grid-row:2; }
+    .keypad-key.operator.multiply { grid-row:4; }
     .keypad-key.operator.subtract { grid-row:3; }
-    .keypad-key.operator.add { grid-row:4; }
-    .money-keypad[data-calculating="true"] .keypad-key[data-money-key="delete"] { grid-column:3; grid-row:4; }
+    .keypad-key.operator.add { grid-row:2; }
+    .money-keypad[data-calculating="true"] .keypad-key[data-money-key="delete"] { grid-column:4; grid-row:1; }
     .keypad-key:disabled { opacity:.45; cursor:default; }
     .money-keypad[data-calculating="true"] { border-radius:0; border-top-color:#dce5dd; }
-    .quick-calculator { position:absolute; inset-inline:0; bottom:100%; height:var(--quick-calculator-height); padding:10px 14px 8px; border:1px solid #d2dfd4; border-bottom:0; border-radius:16px 16px 0 0; background:#fff; }
+    .quick-calculator { position:absolute; inset-inline:0; bottom:100%; display:grid; grid-template-columns:44px minmax(0,1fr) 44px; height:var(--quick-calculator-height); padding:0; border:1px solid #d2dfd4; border-bottom:0; border-radius:16px 16px 0 0; overflow:hidden; background:#fff; }
+    .quick-calculator-body { min-width:0; display:flex; flex-direction:column; justify-content:center; padding:8px 10px; }
     .quick-calculator-topline { display:flex; align-items:center; justify-content:space-between; gap:8px; min-height:25px; }
     .quick-calculator-title { margin:0; color:#435d4b; font-size:11px; font-weight:750; line-height:1.25; }
     .quick-calculator-result { min-width:0; max-width:62%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#235e39; font-size:20px; line-height:1.2; font-weight:800; font-variant-numeric:tabular-nums; }
@@ -166,14 +167,15 @@
     .quick-calculator-expression { display:block; width:100%; min-width:0; height:34px; padding:2px 0 5px; border:0; outline:0; background:#fff; color:#263b2c; font-size:18px; font-variant-numeric:tabular-nums; text-align:right; caret-color:transparent; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
     .quick-calculator-expression::placeholder { color:#637468; font-size:14px; }
     .quick-calculator-expression:focus-visible { outline:2px solid var(--green); outline-offset:1px; border-radius:3px; }
-    .quick-calculator-actions { display:grid; grid-template-columns:1fr 1fr 1.3fr; gap:6px; margin-top:5px; }
-    .quick-calculator-action { min-width:0; min-height:44px; padding:0 8px; border:1px solid #ceded1; border-radius:9px; background:#f1f6f2; color:#31563d; font-size:12px; font-weight:750; touch-action:manipulation; }
-    .quick-calculator-action.cancel { background:#fff; color:#455b4c; }
-    .quick-calculator-action.send { border-color:var(--green); background:var(--green); color:#fff; }
-    .quick-calculator-action:active { background:#d2e5d5; }
+    .quick-calculator-action { min-width:44px; min-height:44px; display:grid; place-items:center; align-self:stretch; padding:0; border:0; border-radius:0; color:#fff; touch-action:manipulation; }
+    .quick-calculator-action svg { width:22px; height:22px; }
+    .quick-calculator-action.cancel { background:var(--danger); }
+    .quick-calculator-action.send { background:var(--green); }
+    .quick-calculator-action.cancel:active { background:#972e23; }
     .quick-calculator-action.send:active { background:#1f633c; }
     .quick-calculator-action:disabled { opacity:.45; cursor:default; }
-    @media (hover:hover) { .keypad-key:not(:disabled):hover, .quick-calculator-action:not(:disabled):hover { background:#deeddf; }.keypad-key.done:not(:disabled):hover, .quick-calculator-action.send:not(:disabled):hover { background:#1f633c; } }
+    .quick-calculator-action:focus-visible { outline:2px solid #fff; outline-offset:-5px; }
+    @media (hover:hover) { .keypad-key:not(:disabled):hover { background:#deeddf; }.keypad-key.done:not(:disabled):hover, .quick-calculator-action.send:not(:disabled):hover { background:#1f633c; }.quick-calculator-action.cancel:hover { background:#972e23; } }
     .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
     .spin { animation:spin .8s linear infinite; }
     @keyframes spin { to { transform:rotate(360deg); } }
@@ -232,7 +234,7 @@
     <header class="brand">
       <div class="brand-info">
         <div class="brand-mark" aria-hidden="true">$</div>
-        <div><div class="brand-name">Finanzas</div><div class="brand-caption"><span>Versión 0.9.2</span><span aria-hidden="true">·</span><button class="app-update" id="appUpdateButton" type="button" title="Buscar y cargar la última versión publicada">Actualizar app</button></div></div>
+        <div><div class="brand-name">Finanzas</div><div class="brand-caption"><span>Versión 0.9.4</span><span aria-hidden="true">·</span><button class="app-update" id="appUpdateButton" type="button" title="Buscar y cargar la última versión publicada">Actualizar app</button></div></div>
       </div>
       <button class="refresh" id="refreshButton" type="button" aria-label="Actualizar tasa de la fecha seleccionada">↻</button>
     </header>
@@ -385,18 +387,21 @@
     <p class="footnote">Conversión referencial. Verifica la tasa aplicada antes de realizar operaciones importantes.</p>
     <section class="money-keypad" id="moneyKeypad" role="group" aria-labelledby="keypadHeading" hidden>
       <section class="quick-calculator" id="quickCalculator" aria-labelledby="quickCalculatorTitle" hidden>
-        <div class="quick-calculator-topline">
-          <h2 class="quick-calculator-title" id="quickCalculatorTitle">Cuenta rápida · USD</h2>
-          <output class="quick-calculator-result" id="quickCalculatorResult" for="quickCalculatorExpression" aria-live="polite">—</output>
+        <button class="quick-calculator-action cancel" type="button" data-money-key="cancel-calculation" aria-label="Cancelar" title="Cancelar la cuenta sin cambiar el monto">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+        </button>
+        <div class="quick-calculator-body">
+          <div class="quick-calculator-topline">
+            <h2 class="quick-calculator-title" id="quickCalculatorTitle">Cuenta rápida · USD</h2>
+            <output class="quick-calculator-result" id="quickCalculatorResult" for="quickCalculatorExpression" aria-live="polite">—</output>
+          </div>
+          <input class="quick-calculator-expression" id="quickCalculatorExpression" type="text" readonly inputmode="none" autocomplete="off" placeholder="Ej. 12 + 8 × 2" aria-label="Operación de la cuenta rápida" aria-describedby="quickCalculatorHelp quickCalculatorNotice">
+          <p class="sr-only" id="quickCalculatorHelp">Escribe números con el teclado de abajo y utiliza los operadores de la columna derecha. En la cuenta rápida se escriben unidades; usa la coma para los centavos. El extremo verde envía el resultado al campo seleccionado y el extremo rojo cancela la cuenta. Limpiar está abajo a la izquierda del teclado.</p>
+          <p class="sr-only" id="quickCalculatorNotice" role="status"></p>
         </div>
-        <input class="quick-calculator-expression" id="quickCalculatorExpression" type="text" readonly inputmode="none" autocomplete="off" placeholder="Ej. 12 + 8 × 2" aria-label="Operación de la cuenta rápida" aria-describedby="quickCalculatorHelp quickCalculatorNotice">
-        <div class="quick-calculator-actions" role="group" aria-label="Acciones de la cuenta rápida">
-          <button class="quick-calculator-action" type="button" data-money-key="reset">Limpiar</button>
-          <button class="quick-calculator-action cancel" type="button" data-money-key="cancel-calculation">Cancelar</button>
-          <button class="quick-calculator-action send" id="quickCalculatorSendButton" type="button" data-money-key="done" disabled>Enviar</button>
-        </div>
-        <p class="sr-only" id="quickCalculatorHelp">Escribe números con el teclado de abajo y utiliza los operadores de la columna derecha. En la cuenta rápida se escriben unidades; usa la coma para los centavos. Enviar coloca el resultado en el campo seleccionado y Cancelar descarta la cuenta.</p>
-        <p class="sr-only" id="quickCalculatorNotice" role="status"></p>
+        <button class="quick-calculator-action send" id="quickCalculatorSendButton" type="button" data-money-key="done" aria-label="Enviar" title="Enviar el resultado al campo seleccionado" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5m-7 7 7-7 7 7"/></svg>
+        </button>
       </section>
       <p class="keypad-heading" id="keypadHeading">Teclado numérico</p>
       <div class="keypad-grid">
@@ -412,16 +417,16 @@
         <button class="keypad-key" type="button" data-money-key="7" aria-label="7">7</button>
         <button class="keypad-key" type="button" data-money-key="8" aria-label="8">8</button>
         <button class="keypad-key" type="button" data-money-key="9" aria-label="9">9</button>
+        <button class="keypad-key action clear" type="button" data-money-key="reset" data-calculation-only hidden>Limpiar</button>
         <button class="keypad-key" type="button" data-money-key="0" aria-label="0">0</button>
         <button class="keypad-key decimal" id="keypadDecimalButton" type="button" data-money-key="decimal" aria-label="Separador decimal" hidden>,</button>
         <button class="keypad-key calculate" id="keypadCalculateButton" type="button" data-money-key="calculate" aria-controls="quickCalculator" aria-expanded="false" hidden>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M8 6h8v4H8zM8 14h1m3 0h1m3 0h.01M8 18h1m3 0h1m3 0h.01"/></svg>
           <span id="keypadCalculateLabel">Calcular</span>
         </button>
-        <button class="keypad-key operator divide" type="button" data-money-key="/" data-calculation-only aria-label="Dividir" hidden>÷</button>
-        <button class="keypad-key operator multiply" type="button" data-money-key="*" data-calculation-only aria-label="Multiplicar" hidden>×</button>
-        <button class="keypad-key operator subtract" type="button" data-money-key="-" data-calculation-only aria-label="Restar" hidden>−</button>
         <button class="keypad-key operator add" type="button" data-money-key="+" data-calculation-only aria-label="Sumar" hidden>+</button>
+        <button class="keypad-key operator subtract" type="button" data-money-key="-" data-calculation-only aria-label="Restar" hidden>−</button>
+        <button class="keypad-key operator multiply" type="button" data-money-key="*" data-calculation-only aria-label="Multiplicar" hidden>×</button>
       </div>
       <p class="sr-only" id="keypadAnnouncement" aria-live="polite" aria-atomic="true"></p>
     </section>
