@@ -9,7 +9,7 @@
   <link rel="icon" href="icon.svg">
   <title>Finanzas · Calculadora y pagos</title>
   <style>
-    :root { color-scheme:light; --bg:#f3f6f2; --panel:#fff; --panel-soft:#f0f5ef; --ink:#1b2921; --muted:#66756b; --green:#28794a; --green-bright:#347f4d; --green-dark:#d3e4d7; --line:#dce5dd; --danger:#b9382b; --money-keypad-height:220px; }
+    :root { color-scheme:light; --bg:#f3f6f2; --panel:#fff; --panel-soft:#f0f5ef; --ink:#1b2921; --muted:#66756b; --green:#28794a; --green-bright:#347f4d; --green-dark:#d3e4d7; --line:#dce5dd; --danger:#b9382b; --money-keypad-height:220px; --quick-calculator-height:132px; }
     * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
     html,body { margin:0; min-height:100%; background:var(--bg); color:var(--ink); font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif; }
     body { min-height:100dvh; background:radial-gradient(ellipse at 50% -180px,#e0efdf 0,transparent 470px),var(--bg); }
@@ -135,6 +135,7 @@
     .page[data-module="comparison"] .footnote { display:none; }
     .footnote { margin:auto 0 0; padding-top:24px; text-align:center; color:var(--muted); font-size:10.5px; line-height:1.5; }
     .page[data-keypad-open="true"] { height:100dvh; min-height:0; overflow:hidden; padding-bottom:calc(var(--money-keypad-height) + 12px + env(safe-area-inset-bottom)); }
+    .page[data-quick-calculator-open="true"] { padding-bottom:calc(var(--money-keypad-height) + var(--quick-calculator-height) + 12px + env(safe-area-inset-bottom)); }
     .page[data-keypad-open="true"] .module-panel { flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; }
     .money-keypad { position:fixed; z-index:20; left:50%; bottom:0; transform:translateX(-50%); width:min(100%,520px); height:calc(var(--money-keypad-height) + env(safe-area-inset-bottom)); padding:6px max(14px,env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left)); border-top:1px solid #cddccd; border-radius:18px 18px 0 0; background:#e9f0e7; box-shadow:0 -5px 20px rgba(34,70,43,.1); }
     .keypad-heading { margin:0 0 4px; color:#536b59; text-align:center; font-size:10px; font-weight:750; line-height:14px; }
@@ -146,6 +147,23 @@
     .keypad-key.action { background:#dce8da; color:#315c3e; }
     .keypad-key.done { background:var(--green); border-color:var(--green); color:#fff; font-size:12px; font-weight:750; }
     .keypad-key.reset { grid-column:4; grid-row:3; font-size:11px; font-weight:750; }
+    .keypad-key.calculate { grid-column:3 / 5; grid-row:4; display:flex; justify-content:center; gap:7px; background:#dce8da; color:#244e32; font-size:12px; font-weight:750; }
+    .keypad-key.calculate svg { width:18px; height:18px; }
+    .keypad-key.decimal { grid-column:1; grid-row:4; }
+    .keypad-key:disabled { opacity:.45; cursor:default; }
+    .money-keypad[data-calculating="true"] { border-radius:0; border-top-color:#dce5dd; }
+    .quick-calculator { position:absolute; inset-inline:0; bottom:100%; height:var(--quick-calculator-height); padding:10px 14px 8px; border:1px solid #d2dfd4; border-bottom:0; border-radius:16px 16px 0 0; background:#fff; }
+    .quick-calculator-topline { display:flex; align-items:center; justify-content:space-between; gap:8px; min-height:25px; }
+    .quick-calculator-title { margin:0; color:#435d4b; font-size:11px; font-weight:750; line-height:1.25; }
+    .quick-calculator-result { min-width:0; max-width:62%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#235e39; font-size:20px; line-height:1.2; font-weight:800; font-variant-numeric:tabular-nums; }
+    .quick-calculator-result.is-error { color:var(--danger); font-size:11px; white-space:normal; text-align:right; }
+    .quick-calculator-expression { display:block; width:100%; min-width:0; height:34px; padding:2px 0 5px; border:0; outline:0; background:#fff; color:#263b2c; font-size:18px; font-variant-numeric:tabular-nums; text-align:right; caret-color:transparent; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
+    .quick-calculator-expression::placeholder { color:#637468; font-size:14px; }
+    .quick-calculator-expression:focus-visible { outline:2px solid var(--green); outline-offset:1px; border-radius:3px; }
+    .quick-calculator-operators { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:4px; margin-top:5px; }
+    .quick-calculator-operator { min-height:44px; padding:0; border:1px solid #ceded1; border-radius:9px; background:#edf4ee; color:#285938; font-size:23px; font-weight:650; touch-action:manipulation; }
+    .quick-calculator-operator:active { background:#d2e5d5; }
+    @media (hover:hover) { .keypad-key:not(:disabled):hover { background:#deeddf; }.keypad-key.done:not(:disabled):hover { background:#1f633c; }.quick-calculator-operator:hover { background:#d9e9dc; } }
     .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
     .spin { animation:spin .8s linear infinite; }
     @keyframes spin { to { transform:rotate(360deg); } }
@@ -204,7 +222,7 @@
     <header class="brand">
       <div class="brand-info">
         <div class="brand-mark" aria-hidden="true">$</div>
-        <div><div class="brand-name">Finanzas</div><div class="brand-caption"><span>Versión 0.8.1</span><span aria-hidden="true">·</span><button class="app-update" id="appUpdateButton" type="button" title="Buscar y cargar la última versión publicada">Actualizar app</button></div></div>
+        <div><div class="brand-name">Finanzas</div><div class="brand-caption"><span>Versión 0.9.0</span><span aria-hidden="true">·</span><button class="app-update" id="appUpdateButton" type="button" title="Buscar y cargar la última versión publicada">Actualizar app</button></div></div>
       </div>
       <button class="refresh" id="refreshButton" type="button" aria-label="Actualizar tasa de la fecha seleccionada">↻</button>
     </header>
@@ -356,6 +374,21 @@
 
     <p class="footnote">Conversión referencial. Verifica la tasa aplicada antes de realizar operaciones importantes.</p>
     <section class="money-keypad" id="moneyKeypad" role="group" aria-labelledby="keypadHeading" hidden>
+      <section class="quick-calculator" id="quickCalculator" aria-labelledby="quickCalculatorTitle" hidden>
+        <div class="quick-calculator-topline">
+          <h2 class="quick-calculator-title" id="quickCalculatorTitle">Cuenta rápida · USD</h2>
+          <output class="quick-calculator-result" id="quickCalculatorResult" for="quickCalculatorExpression" aria-live="polite">—</output>
+        </div>
+        <input class="quick-calculator-expression" id="quickCalculatorExpression" type="text" readonly inputmode="none" autocomplete="off" placeholder="Ej. 12 + 8 × 2" aria-label="Operación de la cuenta rápida" aria-describedby="quickCalculatorHelp quickCalculatorNotice">
+        <div class="quick-calculator-operators" role="group" aria-label="Operaciones">
+          <button class="quick-calculator-operator" type="button" data-money-key="/" aria-label="Dividir">÷</button>
+          <button class="quick-calculator-operator" type="button" data-money-key="*" aria-label="Multiplicar">×</button>
+          <button class="quick-calculator-operator" type="button" data-money-key="-" aria-label="Restar">−</button>
+          <button class="quick-calculator-operator" type="button" data-money-key="+" aria-label="Sumar">+</button>
+        </div>
+        <p class="sr-only" id="quickCalculatorHelp">Escribe números con el teclado de abajo. En la cuenta rápida se escriben unidades; usa la coma para los centavos. Enviar coloca el resultado en el campo seleccionado y Volver descarta la cuenta.</p>
+        <p class="sr-only" id="quickCalculatorNotice" role="status"></p>
+      </section>
       <p class="keypad-heading" id="keypadHeading">Teclado numérico</p>
       <div class="keypad-grid">
         <button class="keypad-key" type="button" data-money-key="1" aria-label="1">1</button>
@@ -365,12 +398,17 @@
         <button class="keypad-key" type="button" data-money-key="4" aria-label="4">4</button>
         <button class="keypad-key" type="button" data-money-key="5" aria-label="5">5</button>
         <button class="keypad-key" type="button" data-money-key="6" aria-label="6">6</button>
-        <button class="keypad-key done" type="button" data-money-key="done">Listo</button>
-        <button class="keypad-key action reset" type="button" data-money-key="reset">Reiniciar</button>
+        <button class="keypad-key done" id="keypadDoneButton" type="button" data-money-key="done">Listo</button>
+        <button class="keypad-key action reset" id="keypadResetButton" type="button" data-money-key="reset">Reiniciar</button>
         <button class="keypad-key" type="button" data-money-key="7" aria-label="7">7</button>
         <button class="keypad-key" type="button" data-money-key="8" aria-label="8">8</button>
         <button class="keypad-key" type="button" data-money-key="9" aria-label="9">9</button>
         <button class="keypad-key" type="button" data-money-key="0" aria-label="0">0</button>
+        <button class="keypad-key decimal" id="keypadDecimalButton" type="button" data-money-key="decimal" aria-label="Separador decimal" hidden>,</button>
+        <button class="keypad-key calculate" id="keypadCalculateButton" type="button" data-money-key="calculate" aria-controls="quickCalculator" aria-expanded="false" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M8 6h8v4H8zM8 14h1m3 0h1m3 0h.01M8 18h1m3 0h1m3 0h.01"/></svg>
+          <span id="keypadCalculateLabel">Calcular</span>
+        </button>
       </div>
       <p class="sr-only" id="keypadAnnouncement" aria-live="polite" aria-atomic="true"></p>
     </section>
@@ -446,6 +484,15 @@
       } else entryDigits = `${entryDigits}${key}`.replace(/^0+(?=\d)/, '').slice(0, 15);
       formatEntryDigits();
       updateView();
+    }
+
+    function applyCalculatorResult(currency, cents) {
+      if (!Number.isSafeInteger(cents) || cents < 0 || String(cents).length > 15 || !selectCurrency(currency)) return false;
+      entryDigits = String(cents);
+      entryStarted = true;
+      formatEntryDigits();
+      updateView();
+      return true;
     }
 
     function parseAmount(raw) {
@@ -703,7 +750,8 @@
         if (!wasControlled || reloadingApp) return;
         const editingAmount = ['usdAmount', 'vesAmount', 'cashPrice', 'localPrice'].some(id => document.activeElement === $(id));
         const comparingPrices = typeof hasComparisonEdits === 'function' && hasComparisonEdits();
-        if (entryStarted || editingAmount || comparingPrices) {
+        const draftingCalculation = typeof hasQuickCalculationDraft === 'function' && hasQuickCalculationDraft();
+        if (entryStarted || editingAmount || comparingPrices || draftingCalculation) {
           $('appUpdateButton').textContent = 'Nueva versión';
           $('appUpdateButton').title = 'Cargar la nueva versión al terminar de calcular';
           return;
