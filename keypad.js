@@ -99,15 +99,14 @@ function refreshQuickCalculation() {
   document.querySelector('.page').dataset.quickCalculatorOpen = String(open);
   $('moneyKeypad').dataset.calculating = String(open);
   $('quickCalculator').hidden = !open;
-  $('keypadCalculateButton').hidden = !available;
+  $('keypadCalculateButton').hidden = !available || open;
   $('keypadCalculateButton').setAttribute('aria-expanded', String(open));
-  $('keypadCalculateLabel').textContent = open ? 'Volver' : 'Calcular';
-  $('keypadCalculateButton').title = open ? 'Volver al monto sin enviar la cuenta' : 'Hacer una cuenta rápida';
   $('keypadDecimalButton').hidden = !open;
-  $('keypadDoneButton').textContent = open ? 'Enviar' : 'Listo';
-  $('keypadResetButton').textContent = open ? 'Limpiar' : 'Reiniciar';
+  $('keypadDoneButton').hidden = open;
+  $('keypadResetButton').hidden = open;
+  document.querySelectorAll('[data-calculation-only]').forEach(button => { button.hidden = !open; });
   const result = evaluateQuickCalculation(quickCalculationExpression);
-  $('keypadDoneButton').disabled = open && result.cents === null;
+  $('quickCalculatorSendButton').disabled = result.cents === null;
   if (!open) return;
   const currency = moneyKeypadTarget === 'usdAmount' ? 'USD' : 'Bs';
   $('quickCalculatorTitle').textContent = `Cuenta rápida · ${currency}`;
@@ -121,10 +120,11 @@ function refreshQuickCalculation() {
 }
 
 function closeQuickCalculation() {
+  const returnFocus = $('quickCalculator').contains(document.activeElement);
   quickCalculationOpen = false;
   quickCalculationExpression = '';
   refreshMoneyKeypad();
-  if ($('quickCalculator').contains(document.activeElement)) $(moneyKeypadTarget).focus({ preventScroll: true });
+  if (returnFocus && moneyKeypadTarget) $(moneyKeypadTarget).focus({ preventScroll: true });
 }
 
 function writeQuickCalculation(key) {
@@ -203,6 +203,11 @@ function closeMoneyKeypad() {
 
 function writeMoneyKey(key) {
   if (!moneyKeypadTarget || $('moneyKeypad').hidden) return;
+  if (key === 'cancel-calculation') {
+    closeQuickCalculation();
+    $('keypadAnnouncement').textContent = 'Cuenta cancelada. El monto no cambió.';
+    return;
+  }
   if (key === 'calculate') {
     if (!isConverterKeypadTarget()) return;
     if (quickCalculationOpen) closeQuickCalculation();
