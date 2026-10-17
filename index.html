@@ -153,8 +153,8 @@
     .keypad-key.clear { grid-column:1; grid-row:4; font-size:11px; font-weight:750; }
     .keypad-key.operator { grid-column:4; background:#dce8da; color:#285938; font-size:25px; }
     .keypad-key.operator.multiply { grid-row:4; }
-    .keypad-key.operator.subtract { grid-row:3; }
-    .keypad-key.operator.add { grid-row:2; }
+    .keypad-key.operator.subtract { grid-row:2; }
+    .keypad-key.operator.add { grid-row:3; }
     .money-keypad[data-calculating="true"] .keypad-key[data-money-key="delete"] { grid-column:4; grid-row:1; }
     .keypad-key:disabled { opacity:.45; cursor:default; }
     .money-keypad[data-calculating="true"] { border-radius:0; border-top-color:#dce5dd; }
@@ -234,7 +234,7 @@
     <header class="brand">
       <div class="brand-info">
         <div class="brand-mark" aria-hidden="true">$</div>
-        <div><div class="brand-name">Finanzas</div><div class="brand-caption"><span>Versión 0.9.4</span><span aria-hidden="true">·</span><button class="app-update" id="appUpdateButton" type="button" title="Buscar y cargar la última versión publicada">Actualizar app</button></div></div>
+        <div><div class="brand-name">Finanzas</div><div class="brand-caption"><span>Versión 0.9.5</span><span aria-hidden="true">·</span><button class="app-update" id="appUpdateButton" type="button" title="Buscar y cargar la última versión publicada">Actualizar app</button></div></div>
       </div>
       <button class="refresh" id="refreshButton" type="button" aria-label="Actualizar tasa de la fecha seleccionada">↻</button>
     </header>
@@ -424,8 +424,8 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M8 6h8v4H8zM8 14h1m3 0h1m3 0h.01M8 18h1m3 0h1m3 0h.01"/></svg>
           <span id="keypadCalculateLabel">Calcular</span>
         </button>
-        <button class="keypad-key operator add" type="button" data-money-key="+" data-calculation-only aria-label="Sumar" hidden>+</button>
         <button class="keypad-key operator subtract" type="button" data-money-key="-" data-calculation-only aria-label="Restar" hidden>−</button>
+        <button class="keypad-key operator add" type="button" data-money-key="+" data-calculation-only aria-label="Sumar" hidden>+</button>
         <button class="keypad-key operator multiply" type="button" data-money-key="*" data-calculation-only aria-label="Multiplicar" hidden>×</button>
       </div>
       <p class="sr-only" id="keypadAnnouncement" aria-live="polite" aria-atomic="true"></p>
