@@ -159,10 +159,21 @@ function sendQuickCalculation() {
   if (!isConverterKeypadTarget() || result.cents === null) { refreshMoneyKeypad(); return; }
   const inputId = moneyKeypadTarget;
   const currency = inputId === 'usdAmount' ? 'USD' : 'VES';
-  if (!applyCalculatorResult(currency, result.cents)) return;
+  if (!applyCalculatorResult(currency, result.cents, quickCalculationExpression)) return;
   closeQuickCalculation();
   $(inputId).focus({ preventScroll: true });
   $('keypadAnnouncement').textContent = `Resultado enviado a ${currency === 'USD' ? 'USD' : 'Bs'}: ${$(inputId).value}`;
+}
+
+function restoreSentCalculation(currency) {
+  const saved = sentCalculations[currency];
+  if (!saved || !entryStarted || activeCurrency !== currency || saved.cents !== Number(entryDigits)) return;
+  const inputId = currency === 'USD' ? 'usdAmount' : 'vesAmount';
+  if (!openMoneyKeypad(inputId)) return;
+  quickCalculationExpression = saved.expression;
+  quickCalculationOpen = true;
+  refreshMoneyKeypad();
+  $('keypadAnnouncement').textContent = 'Operación recuperada. Puedes corregirla o continuar y volver a enviarla.';
 }
 
 function refreshMoneyKeypad() {

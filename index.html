@@ -54,11 +54,11 @@
     .amount-input { width:100%; min-width:0; padding:8px 0; border:0; outline:0; background:transparent; color:#1d2b22; caret-color:transparent; text-align:right; font-size:22px; font-weight:700; font-variant-numeric:tabular-nums; cursor:pointer; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
     .amount-input::placeholder { color:#87948a; }
     .amount-input:focus-visible { outline:none; }
-    .copy-amount { width:44px; height:44px; display:grid; place-items:center; padding:0; border:0; border-radius:10px; background:transparent; color:var(--green); touch-action:manipulation; }
-    .copy-amount svg { width:20px; height:20px; }
-    .copy-amount:active { background:#dcebdd; }
-    .copy-amount:disabled { visibility:hidden; pointer-events:none; }
-    @media (hover:hover) { .copy-amount:not(:disabled):hover { background:#edf5ed; } }
+    .amount-action { grid-column:3; grid-row:1; width:44px; height:44px; display:grid; place-items:center; padding:0; border:0; border-radius:10px; background:transparent; color:var(--green); touch-action:manipulation; }
+    .amount-action svg { width:20px; height:20px; }
+    .amount-action:active { background:#dcebdd; }
+    .amount-action:disabled { visibility:hidden; pointer-events:none; }
+    @media (hover:hover) { .amount-action:not(:disabled):hover { background:#edf5ed; } }
     .copy-notice { position:fixed; z-index:30; bottom:calc(18px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); width:max-content; max-width:calc(100% - 32px); margin:0; padding:10px 16px; border-radius:12px; background:#213d2a; color:#fff; font-size:14px; line-height:1.4; text-align:center; overflow-wrap:anywhere; box-shadow:0 5px 18px rgba(27,41,33,.18); pointer-events:none; }
     .copy-notice:empty { visibility:hidden; }
     .copy-notice.is-error { background:#8b2d23; }
@@ -242,7 +242,7 @@
     <header class="brand">
       <div class="brand-info">
         <div class="brand-mark" aria-hidden="true">$</div>
-        <div><div class="brand-name">Finanzas</div><div class="brand-caption"><span>Versión 0.9.7</span><span aria-hidden="true">·</span><button class="app-update" id="appUpdateButton" type="button" title="Buscar y cargar la última versión publicada">Actualizar app</button></div></div>
+        <div><div class="brand-name">Finanzas</div><div class="brand-caption"><span>Versión 0.9.8</span><span aria-hidden="true">·</span><button class="app-update" id="appUpdateButton" type="button" title="Buscar y cargar la última versión publicada">Actualizar app</button></div></div>
       </div>
       <button class="refresh" id="refreshButton" type="button" aria-label="Actualizar tasa de la fecha seleccionada">↻</button>
     </header>
@@ -281,15 +281,21 @@
         <div class="currency-field" data-currency="USD">
           <label class="currency-code" for="usdAmount">USD</label>
           <input class="amount-input" id="usdAmount" type="text" inputmode="none" readonly autocomplete="off" value="1,00" aria-label="Monto en dólares estadounidenses" aria-controls="moneyKeypad" aria-expanded="false">
-          <button class="copy-amount" type="button" data-copy-currency="USD" aria-label="Copiar resultado en dólares" title="Copiar resultado en dólares" disabled>
+          <button class="amount-action copy-amount" type="button" data-copy-currency="USD" aria-label="Copiar resultado en dólares" title="Copiar resultado en dólares" disabled>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg>
+          </button>
+          <button class="amount-action" type="button" data-restore-calculation="USD" aria-label="Recuperar operación en dólares" title="Recuperar la operación enviada" hidden disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 11h1m3 0h1m3 0h.01M8 15h1m3 0h1m3 0h.01M8 18h1m3 0h1m3 0h.01"/></svg>
           </button>
         </div>
         <div class="currency-field" data-currency="VES">
           <label class="currency-code" for="vesAmount">Bs</label>
           <input class="amount-input" id="vesAmount" type="text" inputmode="none" readonly autocomplete="off" placeholder="0,00" aria-label="Monto en bolívares" aria-controls="moneyKeypad" aria-expanded="false">
-          <button class="copy-amount" type="button" data-copy-currency="VES" aria-label="Copiar resultado en bolívares" title="Copiar resultado en bolívares" disabled>
+          <button class="amount-action copy-amount" type="button" data-copy-currency="VES" aria-label="Copiar resultado en bolívares" title="Copiar resultado en bolívares" disabled>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg>
+          </button>
+          <button class="amount-action" type="button" data-restore-calculation="VES" aria-label="Recuperar operación en bolívares" title="Recuperar la operación enviada" hidden disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 11h1m3 0h1m3 0h.01M8 15h1m3 0h1m3 0h.01M8 18h1m3 0h1m3 0h.01"/></svg>
           </button>
         </div>
         <div class="converter-actions">
@@ -456,6 +462,8 @@
     let entryDigits = '';
     let requestNumber = 0;
     let copyNoticeTimer = null;
+    // Each sent operation belongs to its exact amount for the current session.
+    const sentCalculations = { USD: null, VES: null };
 
     function copyAmountText(currency) {
       // Copy the displayed cents exactly, without a currency sign or thousands separator.
@@ -463,11 +471,19 @@
       return /^\d+,\d{2}$/.test(value) ? value : null;
     }
 
-    function syncCopyButtons() {
+    function syncConverterActions() {
       const sourceCurrency = entryStarted && activeCurrency ? activeCurrency : 'USD';
       document.querySelectorAll('[data-copy-currency]').forEach(button => {
         const currency = button.dataset.copyCurrency;
         button.disabled = !selectedRate || currency === sourceCurrency || copyAmountText(currency) === null;
+      });
+      document.querySelectorAll('[data-restore-calculation]').forEach(button => {
+        const currency = button.dataset.restoreCalculation;
+        const saved = sentCalculations[currency];
+        const available = entryStarted && sourceCurrency === currency && saved
+          && saved.cents === Number(entryDigits);
+        button.hidden = !available;
+        button.disabled = !available;
       });
     }
 
@@ -574,6 +590,7 @@
       const isDigit = /^\d$/.test(key);
       const isDelete = key === 'delete';
       if (!isDigit && !isDelete) return;
+      sentCalculations[currency] = null;
       if (isDigit && !entryStarted) {
         entryDigits = '';
         entryStarted = true;
@@ -589,10 +606,11 @@
       updateView();
     }
 
-    function applyCalculatorResult(currency, cents) {
+    function applyCalculatorResult(currency, cents, expression = '') {
       if (!Number.isSafeInteger(cents) || cents < 0 || String(cents).length > 15 || !selectCurrency(currency)) return false;
       entryDigits = String(cents);
       entryStarted = true;
+      sentCalculations[currency] = expression ? { expression, cents } : null;
       formatEntryDigits();
       updateView();
       return true;
@@ -707,7 +725,7 @@
       }
       syncCurrencySelection();
       convertFromActiveField();
-      syncCopyButtons();
+      syncConverterActions();
     }
 
     async function loadRate(date = $('selectedDate').value) {
@@ -768,6 +786,8 @@
     function resetConverter() {
       entryStarted = false;
       entryDigits = '';
+      sentCalculations.USD = null;
+      sentCalculations.VES = null;
       $('usdAmount').value = fmt(1);
       $('vesAmount').value = '';
       $('conversionHint').textContent = 'Toca USD o Bs para elegir el monto que vas a escribir.';
@@ -791,6 +811,7 @@
         if (!selectCurrency(currency)) return;
         const pastedDigits = (event.clipboardData?.getData('text') || '').replace(/\D/g, '');
         if (!pastedDigits) return;
+        sentCalculations[currency] = null;
         if (!entryStarted) {
           entryDigits = '';
           entryStarted = true;
@@ -800,13 +821,13 @@
         updateView();
       });
       input.closest('.currency-field').addEventListener('pointerdown', event => {
-        if (event.target.closest('[data-copy-currency]')) return;
+        if (event.target.closest('.amount-action')) return;
         if (!selectCurrency(currency)) {
           event.preventDefault();
         }
       });
       input.closest('.currency-field').addEventListener('click', event => {
-        if (event.target.closest('[data-copy-currency]')) return;
+        if (event.target.closest('.amount-action')) return;
         if (!selectCurrency(currency)) {
           event.preventDefault();
           return;
@@ -814,14 +835,15 @@
         input.focus({ preventScroll: true });
       });
     });
-    document.querySelectorAll('[data-copy-currency]').forEach(button => {
+    document.querySelectorAll('.amount-action').forEach(button => {
       button.addEventListener('pointerdown', event => {
         event.stopPropagation();
         if (event.button === 0) event.preventDefault();
       });
       button.addEventListener('click', event => {
         event.stopPropagation();
-        copyConvertedAmount(button.dataset.copyCurrency);
+        if (button.dataset.restoreCalculation) restoreSentCalculation(button.dataset.restoreCalculation);
+        else copyConvertedAmount(button.dataset.copyCurrency);
       });
     });
     $('resetButton').addEventListener('pointerdown', event => {
