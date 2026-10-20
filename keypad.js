@@ -108,8 +108,6 @@ function refreshQuickCalculation() {
   const result = evaluateQuickCalculation(quickCalculationExpression);
   $('quickCalculatorSendButton').disabled = result.cents === null;
   if (!open) return;
-  const currency = moneyKeypadTarget === 'usdAmount' ? 'USD' : 'Bs';
-  $('quickCalculatorTitle').textContent = `Cuenta rápida · ${currency}`;
   const input = $('quickCalculatorExpression');
   input.value = quickCalculationExpression.replace(/\*/g, ' × ').replace(/\//g, ' ÷ ').replace(/\+/g, ' + ').replace(/-/g, ' − ').replace(/\./g, ',');
   input.scrollLeft = input.scrollWidth;

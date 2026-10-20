@@ -47,13 +47,23 @@
     .rate-status.error { color:var(--danger); }
     .date-note { margin:8px 2px 0; color:var(--muted); font-size:10px; line-height:1.45; }
     .converter { margin-top:10px; padding:8px 15px 10px; border:1px solid #e0e7e1; border-radius:21px; background:var(--panel); box-shadow:0 9px 24px rgba(34,70,43,.07); }
-    .currency-field { display:grid; grid-template-columns:49px minmax(0,1fr); align-items:center; gap:10px; min-height:51px; border-bottom:1px solid #e1e7e2; }
+    .currency-field { display:grid; grid-template-columns:49px minmax(0,1fr) 44px; align-items:center; gap:10px; min-height:51px; border-bottom:1px solid #e1e7e2; }
     .currency-field.is-active { margin-inline:-8px; padding-inline:8px; border-bottom-color:var(--green); border-radius:9px 9px 0 0; background:#edf5ed; }
-    .currency-field.is-locked { opacity:.48; }
+    .currency-field.is-locked .currency-code { color:var(--muted); }
     .currency-code { color:#37493c; font-size:15px; font-weight:800; }
     .amount-input { width:100%; min-width:0; padding:8px 0; border:0; outline:0; background:transparent; color:#1d2b22; caret-color:transparent; text-align:right; font-size:22px; font-weight:700; font-variant-numeric:tabular-nums; cursor:pointer; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
     .amount-input::placeholder { color:#87948a; }
     .amount-input:focus-visible { outline:none; }
+    .copy-amount { width:44px; height:44px; display:grid; place-items:center; padding:0; border:0; border-radius:10px; background:transparent; color:var(--green); touch-action:manipulation; }
+    .copy-amount svg { width:20px; height:20px; }
+    .copy-amount:active { background:#dcebdd; }
+    .copy-amount:disabled { visibility:hidden; pointer-events:none; }
+    @media (hover:hover) { .copy-amount:not(:disabled):hover { background:#edf5ed; } }
+    .copy-notice { position:fixed; z-index:30; bottom:calc(18px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); width:max-content; max-width:calc(100% - 32px); margin:0; padding:10px 16px; border-radius:12px; background:#213d2a; color:#fff; font-size:14px; line-height:1.4; text-align:center; overflow-wrap:anywhere; box-shadow:0 5px 18px rgba(27,41,33,.18); pointer-events:none; }
+    .copy-notice:empty { visibility:hidden; }
+    .copy-notice.is-error { background:#8b2d23; }
+    .page[data-keypad-open="true"] .copy-notice { bottom:calc(var(--money-keypad-height) + env(safe-area-inset-bottom) + 12px); }
+    .page[data-keypad-open="true"][data-quick-calculator-open="true"] .copy-notice { bottom:calc(var(--money-keypad-height) + var(--quick-calculator-height) + env(safe-area-inset-bottom) + 12px); }
     .converter-actions { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:7px; }
     .conversion-hint { margin:0; color:var(--muted); font-size:10.5px; line-height:1.4; }
     .reset-button { flex:none; min-height:38px; padding:0 12px; border:1px solid #d7e5d9; border-radius:11px; background:#edf5ed; color:#267147; font-size:12px; font-weight:750; }
@@ -159,13 +169,11 @@
     .keypad-key:disabled { opacity:.45; cursor:default; }
     .money-keypad[data-calculating="true"] { border-radius:0; border-top-color:#dce5dd; }
     .quick-calculator { position:absolute; inset-inline:0; bottom:100%; display:grid; grid-template-columns:44px minmax(0,1fr) 44px; height:var(--quick-calculator-height); padding:0; border:1px solid #d2dfd4; border-bottom:0; border-radius:16px 16px 0 0; overflow:hidden; background:#fff; }
-    .quick-calculator-body { min-width:0; display:flex; flex-direction:column; justify-content:center; padding:8px 10px; }
-    .quick-calculator-topline { display:flex; align-items:center; justify-content:space-between; gap:8px; min-height:25px; }
-    .quick-calculator-title { margin:0; color:#435d4b; font-size:11px; font-weight:750; line-height:1.25; }
-    .quick-calculator-result { min-width:0; max-width:62%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#235e39; font-size:20px; line-height:1.2; font-weight:800; font-variant-numeric:tabular-nums; }
-    .quick-calculator-result.is-error { color:var(--danger); font-size:11px; white-space:normal; text-align:right; }
-    .quick-calculator-expression { display:block; width:100%; min-width:0; height:34px; padding:2px 0 5px; border:0; outline:0; background:#fff; color:#263b2c; font-size:18px; font-variant-numeric:tabular-nums; text-align:right; caret-color:transparent; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
-    .quick-calculator-expression::placeholder { color:#637468; font-size:14px; }
+    .quick-calculator-body { min-width:0; display:flex; flex-direction:column; justify-content:center; gap:3px; padding:8px 10px; }
+    .quick-calculator-expression { display:block; width:100%; min-width:0; height:36px; padding:2px 0; border:0; outline:0; background:#fff; color:#263b2c; font-size:22px; line-height:1.35; font-weight:650; font-variant-numeric:tabular-nums; text-align:right; caret-color:transparent; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
+    .quick-calculator-expression::placeholder { color:#637468; font-size:17px; font-weight:400; }
+    .quick-calculator-result { display:block; min-width:0; min-height:20px; color:#52665a; font-size:14px; line-height:1.4; font-weight:600; font-variant-numeric:tabular-nums; text-align:right; overflow-wrap:anywhere; }
+    .quick-calculator-result.is-error { color:var(--danger); font-size:11px; }
     .quick-calculator-expression:focus-visible { outline:2px solid var(--green); outline-offset:1px; border-radius:3px; }
     .quick-calculator-action { min-width:44px; min-height:44px; display:grid; place-items:center; align-self:stretch; padding:0; border:0; border-radius:0; color:#fff; touch-action:manipulation; }
     .quick-calculator-action svg { width:22px; height:22px; }
@@ -216,7 +224,7 @@
       .rate-updated { margin-top:8px; font-size:10px; }
       .rate-status { margin-top:4px; font-size:10px; }
       .converter { margin-top:10px; padding:9px 14px 11px; border-radius:19px; box-shadow:0 7px 18px rgba(34,70,43,.07); }
-      .currency-field { grid-template-columns:45px minmax(0,1fr); min-height:53px; gap:8px; }
+      .currency-field { grid-template-columns:45px minmax(0,1fr) 44px; min-height:53px; gap:8px; }
       .currency-code { font-size:14px; }
       .amount-input { padding:8px 0; font-size:23px; }
       .price-input { font-size:21px; }
@@ -234,7 +242,7 @@
     <header class="brand">
       <div class="brand-info">
         <div class="brand-mark" aria-hidden="true">$</div>
-        <div><div class="brand-name">Finanzas</div><div class="brand-caption"><span>Versión 0.9.5</span><span aria-hidden="true">·</span><button class="app-update" id="appUpdateButton" type="button" title="Buscar y cargar la última versión publicada">Actualizar app</button></div></div>
+        <div><div class="brand-name">Finanzas</div><div class="brand-caption"><span>Versión 0.9.7</span><span aria-hidden="true">·</span><button class="app-update" id="appUpdateButton" type="button" title="Buscar y cargar la última versión publicada">Actualizar app</button></div></div>
       </div>
       <button class="refresh" id="refreshButton" type="button" aria-label="Actualizar tasa de la fecha seleccionada">↻</button>
     </header>
@@ -273,10 +281,16 @@
         <div class="currency-field" data-currency="USD">
           <label class="currency-code" for="usdAmount">USD</label>
           <input class="amount-input" id="usdAmount" type="text" inputmode="none" readonly autocomplete="off" value="1,00" aria-label="Monto en dólares estadounidenses" aria-controls="moneyKeypad" aria-expanded="false">
+          <button class="copy-amount" type="button" data-copy-currency="USD" aria-label="Copiar resultado en dólares" title="Copiar resultado en dólares" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg>
+          </button>
         </div>
         <div class="currency-field" data-currency="VES">
           <label class="currency-code" for="vesAmount">Bs</label>
           <input class="amount-input" id="vesAmount" type="text" inputmode="none" readonly autocomplete="off" placeholder="0,00" aria-label="Monto en bolívares" aria-controls="moneyKeypad" aria-expanded="false">
+          <button class="copy-amount" type="button" data-copy-currency="VES" aria-label="Copiar resultado en bolívares" title="Copiar resultado en bolívares" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg>
+          </button>
         </div>
         <div class="converter-actions">
           <p class="conversion-hint" id="conversionHint" role="status">Toca USD o Bs para elegir el monto que vas a escribir.</p>
@@ -386,16 +400,13 @@
 
     <p class="footnote">Conversión referencial. Verifica la tasa aplicada antes de realizar operaciones importantes.</p>
     <section class="money-keypad" id="moneyKeypad" role="group" aria-labelledby="keypadHeading" hidden>
-      <section class="quick-calculator" id="quickCalculator" aria-labelledby="quickCalculatorTitle" hidden>
+      <section class="quick-calculator" id="quickCalculator" aria-label="Calculadora de operaciones" hidden>
         <button class="quick-calculator-action cancel" type="button" data-money-key="cancel-calculation" aria-label="Cancelar" title="Cancelar la cuenta sin cambiar el monto">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
         </button>
         <div class="quick-calculator-body">
-          <div class="quick-calculator-topline">
-            <h2 class="quick-calculator-title" id="quickCalculatorTitle">Cuenta rápida · USD</h2>
-            <output class="quick-calculator-result" id="quickCalculatorResult" for="quickCalculatorExpression" aria-live="polite">—</output>
-          </div>
-          <input class="quick-calculator-expression" id="quickCalculatorExpression" type="text" readonly inputmode="none" autocomplete="off" placeholder="Ej. 12 + 8 × 2" aria-label="Operación de la cuenta rápida" aria-describedby="quickCalculatorHelp quickCalculatorNotice">
+          <input class="quick-calculator-expression" id="quickCalculatorExpression" type="text" readonly inputmode="none" autocomplete="off" placeholder="Ej. 12 + 8 × 2" aria-label="Operación matemática" aria-describedby="quickCalculatorHelp quickCalculatorNotice">
+          <output class="quick-calculator-result" id="quickCalculatorResult" for="quickCalculatorExpression" aria-live="polite">—</output>
           <p class="sr-only" id="quickCalculatorHelp">Escribe números con el teclado de abajo y utiliza los operadores de la columna derecha. En la cuenta rápida se escriben unidades; usa la coma para los centavos. El extremo verde envía el resultado al campo seleccionado y el extremo rojo cancela la cuenta. Limpiar está abajo a la izquierda del teclado.</p>
           <p class="sr-only" id="quickCalculatorNotice" role="status"></p>
         </div>
@@ -430,6 +441,7 @@
       </div>
       <p class="sr-only" id="keypadAnnouncement" aria-live="polite" aria-atomic="true"></p>
     </section>
+    <p class="copy-notice" id="copyNotice" role="status" aria-live="polite" aria-atomic="true"></p>
   </main>
 
   <script>
@@ -443,6 +455,79 @@
     let entryStarted = false;
     let entryDigits = '';
     let requestNumber = 0;
+    let copyNoticeTimer = null;
+
+    function copyAmountText(currency) {
+      // Copy the displayed cents exactly, without a currency sign or thousands separator.
+      const value = $(currency === 'USD' ? 'usdAmount' : 'vesAmount').value.replace(/[.\s]/g, '');
+      return /^\d+,\d{2}$/.test(value) ? value : null;
+    }
+
+    function syncCopyButtons() {
+      const sourceCurrency = entryStarted && activeCurrency ? activeCurrency : 'USD';
+      document.querySelectorAll('[data-copy-currency]').forEach(button => {
+        const currency = button.dataset.copyCurrency;
+        button.disabled = !selectedRate || currency === sourceCurrency || copyAmountText(currency) === null;
+      });
+    }
+
+    function showCopyNotice(message, error = false) {
+      clearTimeout(copyNoticeTimer);
+      const notice = $('copyNotice');
+      notice.classList.toggle('is-error', error);
+      notice.textContent = message;
+      copyNoticeTimer = setTimeout(() => { notice.textContent = ''; }, error ? 4000 : 2200);
+    }
+
+    function copyWithLegacyClipboard(text) {
+      // Support local HTTP previews where the modern Clipboard API is unavailable.
+      // Never select either visible amount or trigger the phone's keyboard.
+      const previousFocus = document.activeElement;
+      const selection = document.getSelection();
+      const savedRanges = [];
+      if (selection) {
+        for (let index = 0; index < selection.rangeCount; index++) savedRanges.push(selection.getRangeAt(index).cloneRange());
+      }
+      const field = document.createElement('textarea');
+      field.value = text;
+      field.readOnly = true;
+      field.inputMode = 'none';
+      field.tabIndex = -1;
+      field.setAttribute('aria-hidden', 'true');
+      field.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;padding:0;border:0;opacity:0;font-size:16px;pointer-events:none;';
+      document.body.appendChild(field);
+      try {
+        field.focus({ preventScroll: true });
+        field.select();
+        field.setSelectionRange(0, text.length);
+        return document.execCommand('copy');
+      } catch (error) {
+        return false;
+      } finally {
+        field.remove();
+        if (previousFocus instanceof HTMLElement && previousFocus.isConnected) previousFocus.focus({ preventScroll: true });
+        if (selection) {
+          selection.removeAllRanges();
+          savedRanges.forEach(range => selection.addRange(range));
+        }
+      }
+    }
+
+    async function copyConvertedAmount(currency) {
+      const button = document.querySelector(`[data-copy-currency="${currency}"]`);
+      const text = copyAmountText(currency);
+      if (!button || button.disabled || text === null) return;
+      let copied = false;
+      if (window.isSecureContext && navigator.clipboard?.writeText) {
+        try {
+          await navigator.clipboard.writeText(text);
+          copied = true;
+        } catch (error) { /* Try the local-preview fallback before reporting a failure. */ }
+      }
+      if (!copied) copied = copyWithLegacyClipboard(text);
+      showCopyNotice(copied ? `Copiado: ${text} ${currency === 'USD' ? 'USD' : 'Bs'}`
+        : 'No se pudo copiar. Vuelve a tocar el icono.', !copied);
+    }
 
     function syncCurrencySelection() {
       document.querySelectorAll('.currency-field').forEach(field => {
@@ -622,6 +707,7 @@
       }
       syncCurrencySelection();
       convertFromActiveField();
+      syncCopyButtons();
     }
 
     async function loadRate(date = $('selectedDate').value) {
@@ -714,16 +800,28 @@
         updateView();
       });
       input.closest('.currency-field').addEventListener('pointerdown', event => {
+        if (event.target.closest('[data-copy-currency]')) return;
         if (!selectCurrency(currency)) {
           event.preventDefault();
         }
       });
       input.closest('.currency-field').addEventListener('click', event => {
+        if (event.target.closest('[data-copy-currency]')) return;
         if (!selectCurrency(currency)) {
           event.preventDefault();
           return;
         }
         input.focus({ preventScroll: true });
+      });
+    });
+    document.querySelectorAll('[data-copy-currency]').forEach(button => {
+      button.addEventListener('pointerdown', event => {
+        event.stopPropagation();
+        if (event.button === 0) event.preventDefault();
+      });
+      button.addEventListener('click', event => {
+        event.stopPropagation();
+        copyConvertedAmount(button.dataset.copyCurrency);
       });
     });
     $('resetButton').addEventListener('pointerdown', event => {
